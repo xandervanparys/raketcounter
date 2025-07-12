@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar'
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null)
+  const [count, setCount] = useState<number>(0)
   const router = useRouter()
 
   useEffect(() => {
@@ -14,7 +15,23 @@ export default function HomePage() {
       if (!data.user) router.push('/login')
       else setUser(data.user)
     })
-  }, [])
+  }, [router])
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      if (!user) return
+      const { count, error } = await supabase
+        .from('raket_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+      if (!error && typeof count === 'number') {
+        setCount(count)
+      }
+    }
+
+    fetchCount()
+  }, [user])
 
   const prikEenRaket = async () => {
     if (!user) return
@@ -23,6 +40,7 @@ export default function HomePage() {
       amount: 1,
     })
     alert('🚀 Raket gelanceerd!')
+    setCount((prev) => prev + 1)
   }
 
   if (!user) return null
@@ -31,7 +49,8 @@ export default function HomePage() {
     <main className="p-8 text-center">
       <Navbar />
       <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter</h1>
-      <p className="mb-4">Ingelogd als: {user.email}</p>
+      <p className="mb-2">Ingelogd als: {user.email}</p>
+      <p className="mb-4">Aantal raketten gelanceerd: <strong>{count}</strong></p>
       <button
         onClick={prikEenRaket}
         className="bg-green-600 text-white px-4 py-2 rounded"
