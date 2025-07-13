@@ -9,9 +9,9 @@ export default function Navbar() {
       <Link href="/" className="mr-4 underline text-blue-600">
         Home
       </Link>
-      {/* <Link href="/leaderboard" className="underline text-blue-600">
+      <Link href="/leaderboard" className="underline text-blue-600">
         Leaderboard
-      </Link> */}
+      </Link>
     </nav>
   )
 }
