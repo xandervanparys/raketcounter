@@ -6,10 +6,12 @@ import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import Navbar from '@/components/Navbar'
 
+
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null)
   const [count, setCount] = useState<number>(0)
   const router = useRouter()
+  const [customAmount, setCustomAmount] = useState<number>(1)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -54,6 +56,23 @@ export default function HomePage() {
     setCount((prev) => prev + 24)
   }
 
+  const customAantalPils = async () => {
+  if (!user) return
+  if (customAmount <= 0) {
+    alert('Geen negatieve pinten fucking ND.')
+    return
+  }
+
+  await supabase.from('raket_logs').insert({
+    user_id: user.id,
+    amount: customAmount,
+  })
+  alert(`✅ ${customAmount} raket(ten) gelanceerd!`)
+  setCount((prev) => prev + customAmount)
+  setCustomAmount(1) // Reset input
+}
+
+
   if (!user) return null
 
   return (
@@ -76,7 +95,22 @@ export default function HomePage() {
         >
           Zet een Bak 🛸
         </button>
+        <div className="flex gap-2">
+        <input
+          type="number"
+          min="1"
+          value={customAmount}
+          onChange={(e) => setCustomAmount(Number(e.target.value))}
+          className="border px-3 py-2 rounded w-24 text-center"
+        />
+        <button
+          onClick={customAantalPils}
+          className="bg-green-600 text-white px-4 py-2 rounded"
+        >
+          Log custom amount
+        </button>
+        </div>
       </div>
     </main>
-  )
-}
+    )
+  }
