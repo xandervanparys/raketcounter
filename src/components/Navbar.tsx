@@ -7,9 +7,7 @@ import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
-interface NavbarProps {
-  user: User
-}
+
 
 export default function Navbar() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
