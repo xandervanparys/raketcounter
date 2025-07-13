@@ -13,7 +13,7 @@ export default function Navbar() {
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data, error }) => {
+    supabase.auth.getUser().then(({ data }) => {
       if (data?.user) {
         setUserEmail(data?.user?.email ?? null)
       }
