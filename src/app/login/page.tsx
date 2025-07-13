@@ -7,7 +7,13 @@ export default function LoginPage() {
   const [displayName, setDisplayName] = useState('')
 
   const loginWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' })
+    // await supabase.auth.signInWithOAuth({ provider: 'google' })
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'http://localhost:3000/auth/callback',
+      },
+    });
   }
 
   const loginWithEmail = async () => {
@@ -21,7 +27,8 @@ export default function LoginPage() {
     else alert('Check your email for the login link!')
   }
 
-  return (
+  return(
+
     <main className="p-8 text-center">
       <h1 className="text-2xl font-bold mb-4">Raketcounter 🚀</h1>
       <div className="mb-6">
