@@ -44,6 +44,16 @@ export default function HomePage() {
     setCount((prev) => prev + 1)
   }
 
+  const zetEenBak = async () => {
+    if (!user) return
+    await supabase.from('raket_logs').insert({
+      user_id: user.id,
+      amount: 24,
+    })
+    alert('🛸 Ufo gelanceerd!')
+    setCount((prev) => prev + 24)
+  }
+
   if (!user) return null
 
   return (
@@ -57,6 +67,12 @@ export default function HomePage() {
         className="bg-green-600 text-white px-4 py-2 rounded"
       >
         Lanceer een raket 🚀
+      </button>
+
+      <button
+        onClick={zetEenBak}
+        className="bg-green-600 text-white px-4 py-2 rounded"
+        >
       </button>
     </main>
   )
