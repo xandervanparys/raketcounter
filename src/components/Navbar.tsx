@@ -4,10 +4,7 @@
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-
-
 
 export default function Navbar() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
