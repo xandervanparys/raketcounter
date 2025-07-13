@@ -73,6 +73,7 @@ export default function HomePage() {
         onClick={zetEenBak}
         className="bg-green-600 text-white px-4 py-2 rounded"
         >
+          Zet een Bak 🛸
       </button>
     </main>
   )
