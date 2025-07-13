@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import Navbar from '@/components/Navbar'
 
 type LeaderboardEntry = {
   user_id: string
@@ -22,7 +23,6 @@ export default function LeaderboardPage() {
         return
       }
 
-      // Group by user and sum
       const userTotals: Record<string, number> = {}
       data?.forEach((log: { user_id: string; amount: number }) => {
         if (!userTotals[log.user_id]) userTotals[log.user_id] = 0
@@ -41,6 +41,7 @@ export default function LeaderboardPage() {
 
   return (
     <main className="p-8">
+        <Navbar />
       <h1 className="text-3xl font-bold mb-6">🏆 Leaderboard</h1>
       <ul className="space-y-2">
         {leaderboard.map((entry, index) => (
