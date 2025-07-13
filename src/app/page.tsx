@@ -62,19 +62,21 @@ export default function HomePage() {
       <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter</h1>
       <p className="mb-2">Ingelogd als: {user.email}</p>
       <p className="mb-4">Aantal raketten gelanceerd: <strong>{count}</strong></p>
-      <button
-        onClick={prikEenRaket}
-        className="bg-green-600 text-white px-4 py-2 rounded"
-      >
-        Lanceer een raket 🚀
-      </button>
+      <div className="flex flex-col items-center gap-4">
+        <button
+          onClick={prikEenRaket}
+          className="bg-green-600 text-white px-4 py-2 rounded"
+        >
+          Lanceer een raket 🚀
+        </button>
 
-      <button
-        onClick={zetEenBak}
-        className="bg-green-600 text-white px-4 py-2 rounded"
+        <button
+          onClick={zetEenBak}
+          className="bg-green-600 text-white px-4 py-2 rounded"
         >
           Zet een Bak 🛸
-      </button>
+        </button>
+      </div>
     </main>
   )
 }
