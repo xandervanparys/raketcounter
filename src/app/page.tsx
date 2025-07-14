@@ -86,7 +86,9 @@ export default function HomePage() {
       <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
       {countLoaded && (
         <motion.p
+          key={count}
           className="mb-4"
+          initial={{ scale: 1 }}
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 0.4, times: [0, 0.2, 1] }}
         >
