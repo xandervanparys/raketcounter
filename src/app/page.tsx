@@ -91,7 +91,7 @@ export default function HomePage() {
             <strong>{count}</strong>
           </motion.div>
         ) : (
-          <div className="w-8 h-6 bg-gray-300 rounded animate-pulse" />
+          <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
         )}
       </p>
       <div className="flex flex-col items-center gap-4">
