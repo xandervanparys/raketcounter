@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import Navbar from '@/components/Navbar'
+import { motion, AnimatePresence } from 'framer-motion'
 
 
 export default function HomePage() {
@@ -13,6 +14,7 @@ export default function HomePage() {
   const router = useRouter()
   const [customAmount, setCustomAmount] = useState<number>(1)
   const [loading, setLoading] = useState(false)
+  const [showCustom, setShowCustom] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -87,22 +89,40 @@ export default function HomePage() {
         >
           Zet een Bak 🛸
         </button>
-        <div className="flex gap-2">
-          <input
-            type="number"
-            min="1"
-            value={customAmount}
-            onChange={(e) => setCustomAmount(Number(e.target.value))}
-            className="border px-3 py-2 rounded w-24 text-center"
-          />
-          <button
-            onClick={() => logRaket(customAmount)}
-            className="bg-green-600 text-white px-4 py-2 rounded"
-            disabled={loading}
-          >
-            Log custom amount
-          </button>
-        </div>
+
+        <button
+          onClick={() => setShowCustom((prev) => !prev)}
+          className="text-sm underline text-blue-600"
+        >
+          {showCustom ? 'Sluit custom input' : 'Voer custom aantal in'}
+        </button>
+
+        <AnimatePresence>
+          {showCustom && (
+            <motion.div
+              className="flex gap-2 mt-2"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <input
+                type="number"
+                min="1"
+                value={customAmount}
+                onChange={(e) => setCustomAmount(Number(e.target.value))}
+                className="border px-3 py-2 rounded w-24 text-center"
+              />
+              <button
+                onClick={() => logRaket(customAmount)}
+                className="bg-green-600 text-white px-4 py-2 rounded"
+                disabled={loading}
+              >
+                Log custom amount
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </main>
   )
