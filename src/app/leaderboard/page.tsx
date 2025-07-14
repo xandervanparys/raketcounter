@@ -133,14 +133,14 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col bg-background">
+    <main className="min-h-screen bg-background">
       <Navbar />
-      <div className="flex-grow container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
             🏆 Leaderboard
           </h1>
-          <p className="text-muted-foreground">Top performers ranked by total rockets</p>
+          <p className="text-muted-foreground">Top astronauten ranked door totaal gelanceerde raketten</p>
         </div>
 
         {/* Top 3 Podium */}
