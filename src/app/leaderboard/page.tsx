@@ -145,7 +145,7 @@ export default function LeaderboardPage() {
 
         {/* Top 3 Podium */}
         {leaderboard.length >= 3 && (
-          <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-3 gap-2 md:gap-6 mb-8 max-w-4xl mx-auto">
             {/* Second Place */}
             <Card className={`${getRankStyle(1)} order-1 md:order-1 mt-4 md:mt-0 hover:scale-105 transition-all duration-200`}>
               <CardContent className="p-3 md:p-6 text-center">
