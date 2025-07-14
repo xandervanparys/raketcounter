@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useRouter } from "next/navigation";
+
 
 export default function SettingsPage() {
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const router = useRouter();
+  
 
   useEffect(() => {
     const fetchUsername = async () => {
@@ -45,6 +49,9 @@ export default function SettingsPage() {
 
   return (
     <main className="p-8 max-w-md mx-auto">
+      <a href="/" className="inline-block mb-4 text-blue-600 hover:underline">
+        ← Home
+      </a>
       <h1 className="text-2xl font-bold mb-6">⚙️ Settings</h1>
 
       <label className="block mb-2 font-semibold" htmlFor="displayName">
