@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase'
 
 export default function SettingsPage() {
   const [displayName, setDisplayName] = useState('')
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   
@@ -17,32 +19,53 @@ export default function SettingsPage() {
       if (user) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('username')
+          .select('username, avatar_url')
           .eq('id', user.id)
           .single()
-        if (!error && data?.username) {
+        if (!error && data) {
           setDisplayName(data.username)
+          setAvatarUrl(data.avatar_url ?? null)
         }
       }
     }
     fetchUsername()
   }, [])
 
-  const updateDisplayName = async () => {
+  // Extract avatar upload logic to a separate function
+  const uploadAvatar = async (userId: string): Promise<string | null> => {
+    if (!avatarFile) return null
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(`public/${userId}`, avatarFile, { upsert: true })
+
+    if (uploadError) {
+      console.error('Avatar upload error:', uploadError)
+      return null
+    }
+
+    return supabase.storage.from('avatars').getPublicUrl(`public/${userId}`).data.publicUrl
+  }
+
+  // Simplified and renamed updateProfile function
+  const updateProfile = async () => {
     setLoading(true)
     setMessage('')
     const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ username: displayName })
-        .eq('id', user.id)
-      if (!error) {
-        setMessage('Display name updated successfully!')
-      } else {
-        setMessage('Failed to update display name.')
-      }
+    if (!user) {
+      setLoading(false)
+      return
     }
+
+    const avatarUrl = await uploadAvatar(user.id)
+    const updates: { username: string, avatar_url?: string } = { username: displayName }
+    if (avatarUrl) updates.avatar_url = avatarUrl
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id)
+
+    setMessage(error ? 'Failed to update profile.' : 'Profile updated successfully!')
     setLoading(false)
   }
 
@@ -65,8 +88,26 @@ export default function SettingsPage() {
         placeholder="Enter your display name"
       />
 
+      <label className="block mb-2 font-semibold" htmlFor="avatar">
+        Avatar Image
+      </label>
+      {avatarUrl && (
+        <img
+          src={avatarUrl}
+          alt="Current avatar"
+          className="w-24 h-24 object-cover rounded-lg mb-4"
+        />
+      )}
+      <input
+        id="avatar"
+        type="file"
+        accept="image/*"
+        onChange={e => setAvatarFile(e.target.files?.[0] ?? null)}
+        className="w-full border rounded px-3 py-2 mb-4"
+      />
+
       <button
-        onClick={updateDisplayName}
+        onClick={updateProfile}
         disabled={loading}
         className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
       >
