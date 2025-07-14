@@ -12,6 +12,7 @@ export default function HomePage() {
   const [count, setCount] = useState<number>(0)
   const router = useRouter()
   const [customAmount, setCustomAmount] = useState<number>(1)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -30,48 +31,37 @@ export default function HomePage() {
 
       if (!error && typeof count === 'number') {
         setCount(count)
+      } else if (error) {
+        console.error('Fetch error:', error)
       }
     }
 
     fetchCount()
   }, [user])
 
-  const prikEenRaket = async () => {
-    if (!user) return
-    await supabase.from('raket_logs').insert({
+  const logRaket = async (amount: number) => {
+    if (!user || loading) return
+    if (amount <= 0) {
+      alert('Geen negatieve pinten fucking ND.')
+      return
+    }
+
+    setLoading(true)
+    const { error } = await supabase.from('raket_logs').insert({
       profile_id: user.id,
-      amount: 1,
+      amount,
     })
-    alert('🚀 Raket gelanceerd!')
-    setCount((prev) => prev + 1)
+    setLoading(false)
+
+    if (!error) {
+      alert(`✅ ${amount} raket(ten) gelanceerd!`)
+      setCount((prev) => prev + amount)
+      setCustomAmount(1)
+    } else {
+      console.error('Insert error:', error)
+      alert('❌ Kon geen raket loggen.')
+    }
   }
-
-  const zetEenBak = async () => {
-    if (!user) return
-    await supabase.from('raket_logs').insert({
-      profile_id: user.id,
-      amount: 24,
-    })
-    alert('🛸 Ufo gelanceerd!')
-    setCount((prev) => prev + 24)
-  }
-
-  const customAantalPils = async () => {
-  if (!user) return
-  if (customAmount <= 0) {
-    alert('Geen negatieve pinten fucking ND.')
-    return
-  }
-
-  await supabase.from('raket_logs').insert({
-    profile_id: user.id,
-    amount: customAmount,
-  })
-  alert(`✅ ${customAmount} raket(ten) gelanceerd!`)
-  setCount((prev) => prev + customAmount)
-  setCustomAmount(1) // Reset input
-}
-
 
   if (!user) return null
 
@@ -83,34 +73,37 @@ export default function HomePage() {
       <p className="mb-4">Aantal raketten gelanceerd: <strong>{count}</strong></p>
       <div className="flex flex-col items-center gap-4">
         <button
-          onClick={prikEenRaket}
+          onClick={() => logRaket(1)}
           className="bg-green-600 text-white px-4 py-2 rounded"
+          disabled={loading}
         >
           Lanceer een raket 🚀
         </button>
 
         <button
-          onClick={zetEenBak}
+          onClick={() => logRaket(24)}
           className="bg-green-600 text-white px-4 py-2 rounded"
+          disabled={loading}
         >
           Zet een Bak 🛸
         </button>
         <div className="flex gap-2">
-        <input
-          type="number"
-          min="1"
-          value={customAmount}
-          onChange={(e) => setCustomAmount(Number(e.target.value))}
-          className="border px-3 py-2 rounded w-24 text-center"
-        />
-        <button
-          onClick={customAantalPils}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          Log custom amount
-        </button>
+          <input
+            type="number"
+            min="1"
+            value={customAmount}
+            onChange={(e) => setCustomAmount(Number(e.target.value))}
+            className="border px-3 py-2 rounded w-24 text-center"
+          />
+          <button
+            onClick={() => logRaket(customAmount)}
+            className="bg-green-600 text-white px-4 py-2 rounded"
+            disabled={loading}
+          >
+            Log custom amount
+          </button>
         </div>
       </div>
     </main>
-    )
-  }
+  )
+}
