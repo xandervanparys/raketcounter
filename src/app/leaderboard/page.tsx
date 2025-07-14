@@ -140,7 +140,7 @@ export default function LeaderboardPage() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
             🏆 Leaderboard
           </h1>
-          <p className="text-muted-foreground">Top astronauten ranked door totaal gelanceerde raketten</p>
+          <p className="text-muted-foreground">Top Astronauten</p>
         </div>
 
         {/* Top 3 Podium */}
