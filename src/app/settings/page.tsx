@@ -9,21 +9,38 @@ export default function SettingsPage() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user?.user_metadata?.display_name) {
-        setDisplayName(data.user.user_metadata.display_name)
+    const fetchUsername = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single()
+        if (!error && data?.username) {
+          setDisplayName(data.username)
+        }
       }
-    })
+    }
+    fetchUsername()
   }, [])
 
   const updateDisplayName = async () => {
     setLoading(true)
     setMessage('')
-    await supabase.auth.updateUser({
-      data: { display_name: displayName }
-    })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ username: displayName })
+        .eq('id', user.id)
+      if (!error) {
+        setMessage('Display name updated successfully!')
+      } else {
+        setMessage('Failed to update display name.')
+      }
+    }
     setLoading(false)
-    setMessage('Display name updated successfully!')
   }
 
   return (
