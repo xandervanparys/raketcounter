@@ -34,7 +34,7 @@ export default function SettingsPage() {
   // Extract avatar upload logic to a separate function
   const uploadAvatar = async (userId: string): Promise<string | null> => {
     if (!avatarFile) return null
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(`public/${userId}`, avatarFile, { upsert: true })
 
