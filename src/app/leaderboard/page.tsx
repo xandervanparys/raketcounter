@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Navbar from '@/components/Navbar'
+import { Timestamp } from 'next/dist/server/lib/cache-handlers/types'
 
 type LeaderboardEntry = {
   profile_id: string
@@ -15,22 +16,35 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      const { data, error } = await supabase
+      const { data: logs, error: logsError } = await supabase
         .from('raket_logs')
-        .select('profile_id, amount, profiles!inner(username)')
-        .order('amount', { ascending: false })
+        .select('profile_id, amount')
 
-      if (error) {
-        console.error('Error fetching leaderboard:', error)
+      if (logsError) {
+        console.error('Error fetching raket_logs:', logsError)
         return
       }
 
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username')
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError)
+        return
+      }
+
+      const usernameMap = new Map<string, string | null>()
+      profiles.forEach(p => usernameMap.set(p.id, p.username))
+
       const userTotals: Record<string, { total: number; username: string | null }> = {}
 
-      data?.forEach((log: any) => {
-        const profile = log.profiles as { username: string | null };
+      logs.forEach(log => {
         if (!userTotals[log.profile_id]) {
-          userTotals[log.profile_id] = { total: 0, username: profile?.username ?? null }
+          userTotals[log.profile_id] = {
+            total: 0,
+            username: usernameMap.get(log.profile_id) ?? null,
+          }
         }
         userTotals[log.profile_id].total += log.amount
       })
