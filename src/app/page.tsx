@@ -1,83 +1,81 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-import type { User } from '@supabase/supabase-js'
-import Navbar from '@/components/Navbar'
-import { motion, AnimatePresence } from 'framer-motion'
-
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
+import Navbar from "@/components/Navbar";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomePage() {
-  const [user, setUser] = useState<User | null>(null)
-  const [username, setUsername] = useState<string | null>(null)
-  const [count, setCount] = useState<number>(0)
-  const [countLoaded, setCountLoaded] = useState(false)
-  const router = useRouter()
-  const [customAmount, setCustomAmount] = useState<number>(1)
-  const [loading, setLoading] = useState(false)
-  const [showCustom, setShowCustom] = useState(false)
+  const [user, setUser] = useState<User | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [count, setCount] = useState<number>(0);
+  const [countLoaded, setCountLoaded] = useState(false);
+  const router = useRouter();
+  const [customAmount, setCustomAmount] = useState<number>(1);
+  const [loading, setLoading] = useState(false);
+  const [showCustom, setShowCustom] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) router.push('/login')
+      if (!data.user) router.push("/login");
       else {
-        setUser(data.user)
+        setUser(data.user);
         const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', data.user.id)
-          .single()
-        if (!error) setUsername(profile?.username)
+          .from("profiles")
+          .select("username")
+          .eq("id", data.user.id)
+          .single();
+        if (!error) setUsername(profile?.username);
       }
-    })
-  }, [router])
+    });
+  }, [router]);
 
   useEffect(() => {
     const fetchCount = async () => {
-      if (!user) return
-      const { count, error } = await supabase
-        .from('raket_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('profile_id', user.id)
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("raket_logs")
+        .select("amount")
+        .eq("profile_id", user.id);
 
-      if (!error && typeof count === 'number') {
-        setCount(count)
-        setCountLoaded(true)
-      } else if (error) {
-        console.error('Fetch error:', error)
+      if (!error && data) {
+        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
+        setCount(totalAmount);
+        setCountLoaded(true);
       }
-    }
+    };
 
-    fetchCount()
-  }, [user])
+    fetchCount();
+  }, [user]);
 
   const logRaket = async (amount: number) => {
-    if (!user || loading) return
+    if (!user || loading) return;
     if (amount <= 0) {
-      alert('Geen negatieve pinten fucking ND.')
-      return
+      alert("Geen negatieve pinten fucking ND.");
+      return;
     }
 
-    setLoading(true)
-    const { error } = await supabase.from('raket_logs').insert({
+    setLoading(true);
+    const { error } = await supabase.from("raket_logs").insert({
       profile_id: user.id,
       amount,
-    })
-    setLoading(false)
+    });
+    setLoading(false);
 
     if (!error) {
-      setCountLoaded(false)
-      setCount((prev) => prev + amount)
-      setTimeout(() => setCountLoaded(true), 0)
-      setCustomAmount(1)
+      setCountLoaded(false);
+      setCount((prev) => prev + amount);
+      setTimeout(() => setCountLoaded(true), 0);
+      setCustomAmount(1);
     } else {
-      console.error('Insert error:', error)
-      alert('❌ Kon geen raket loggen.')
+      console.error("Insert error:", error);
+      alert("❌ Kon geen raket loggen.");
     }
-  }
+  };
 
-  if (!user) return null
+  if (!user) return null;
 
   return (
     <main className="p-8 text-center">
@@ -118,7 +116,7 @@ export default function HomePage() {
           onClick={() => setShowCustom((prev) => !prev)}
           className="text-sm underline text-blue-600"
         >
-          {showCustom ? 'Sluit custom input' : 'Voer custom aantal in'}
+          {showCustom ? "Sluit custom input" : "Voer custom aantal in"}
         </button>
 
         <AnimatePresence>
@@ -126,7 +124,7 @@ export default function HomePage() {
             <motion.div
               className="flex gap-2 mt-2"
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
             >
@@ -150,5 +148,5 @@ export default function HomePage() {
         </AnimatePresence>
       </div>
     </main>
-  )
+  );
 }
