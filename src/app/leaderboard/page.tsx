@@ -83,7 +83,7 @@ export default function LeaderboardPage() {
           <li key={entry.profile_id} className="bg-gray-100 p-4 rounded shadow">
             <div className="flex items-center gap-3">
               <img
-                src={entry.avatar_url ?? ''}
+                src={entry.avatar_url ?? '/ND_default.png'}
                 alt="Avatar"
                 className="w-8 h-8 rounded-md object-cover bg-gray-200"
               />

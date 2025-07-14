@@ -56,9 +56,9 @@ export default function HomePage() {
     setLoading(false)
 
     if (!error) {
-      alert(`✅ ${amount} raket(ten) gelanceerd!`)
       setCount((prev) => prev + amount)
       setCustomAmount(1)
+      alert(`✅ ${amount} raket(ten) gelanceerd!`)
     } else {
       console.error('Insert error:', error)
       alert('❌ Kon geen raket loggen.')
