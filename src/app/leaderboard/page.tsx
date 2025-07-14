@@ -17,7 +17,7 @@ export default function LeaderboardPage() {
     const fetchLeaderboard = async () => {
       const { data, error } = await supabase
         .from('raket_logs')
-        .select('profile_id, amount, profiles(username)')
+        .select('profile_id, amount, profiles!inner(username)')
         .order('amount', { ascending: false })
 
       if (error) {
@@ -27,8 +27,8 @@ export default function LeaderboardPage() {
 
       const userTotals: Record<string, { total: number; username: string | null }> = {}
 
-      data?.forEach((log: { profile_id: string; amount: number; profiles: { username: string | null }[] }) => {
-        const profile = log.profiles[0];
+      data?.forEach((log: any) => {
+        const profile = log.profiles as { username: string | null };
         if (!userTotals[log.profile_id]) {
           userTotals[log.profile_id] = { total: 0, username: profile?.username ?? null }
         }
