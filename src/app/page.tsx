@@ -80,7 +80,14 @@ export default function HomePage() {
       <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
       <p className="mb-4">
         Aantal raketten gelanceerd:{" "}
-        <strong>{count}</strong>
+        <motion.div
+          key={count}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: [1, 1.3, 1] }}
+          transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+        >
+          <strong>{count}</strong>
+        </motion.div>
       </p>
       <div className="flex flex-col items-center gap-4">
         <motion.button
