@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Trophy, Medal, Award, Rocket } from "lucide-react"
+import { Trophy, Medal, Award, Rocket } from 'lucide-react'
 
 type LeaderboardEntry = {
   profile_id: string
@@ -96,13 +96,13 @@ export default function LeaderboardPage() {
   const getRankStyle = (index: number) => {
     switch (index) {
       case 0:
-        return "bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200 dark:from-yellow-950/20 dark:to-amber-950/20 dark:border-yellow-800"
+        return "bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200 dark:from-yellow-950/20 dark:to-amber-950/20 dark:border-yellow-800 hover:scale-105 transition-transform duration-200"
       case 1:
-        return "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 dark:from-gray-950/20 dark:to-slate-950/20 dark:border-gray-800"
+        return "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 dark:from-gray-950/20 dark:to-slate-950/20 dark:border-gray-800 hover:scale-105 transition-transform duration-200"
       case 2:
-        return "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 dark:from-amber-950/20 dark:to-orange-950/20 dark:border-amber-800"
+        return "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 dark:from-amber-950/20 dark:to-orange-950/20 dark:border-amber-800 hover:scale-105 transition-transform duration-200"
       default:
-        return "bg-card border-border hover:bg-muted/50 transition-colors"
+        return "bg-card border-border hover:bg-muted/50 hover:scale-[1.02] transition-all duration-200"
     }
   }
 
@@ -120,7 +120,7 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen bg-background pt-16">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
@@ -133,7 +133,7 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background pt-16">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
@@ -147,7 +147,7 @@ export default function LeaderboardPage() {
         {leaderboard.length >= 3 && (
           <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8 max-w-4xl mx-auto">
             {/* Second Place */}
-            <Card className={`${getRankStyle(1)} order-1 md:order-1 mt-4 md:mt-0`}>
+            <Card className={`${getRankStyle(1)} order-1 md:order-1 mt-4 md:mt-0 hover:scale-105 transition-all duration-200`}>
               <CardContent className="p-3 md:p-6 text-center">
                 <div className="flex justify-center mb-3">{getRankIcon(1)}</div>
                 <Avatar className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 md:mb-3">
@@ -165,7 +165,7 @@ export default function LeaderboardPage() {
             </Card>
 
             {/* First Place */}
-            <Card className={`${getRankStyle(0)} order-2 md:order-2 md:scale-110 md:z-10`}>
+            <Card className={`${getRankStyle(0)} order-2 md:order-2 md:scale-110 md:z-10 hover:scale-110 md:hover:scale-125 transition-all duration-200`}>
               <CardContent className="p-3 md:p-6 text-center">
                 <div className="flex justify-center mb-3">{getRankIcon(0)}</div>
                 <Avatar className="w-14 h-14 md:w-20 md:h-20 mx-auto mb-2 md:mb-3 ring-2 md:ring-4 ring-yellow-200 dark:ring-yellow-800">
@@ -184,7 +184,7 @@ export default function LeaderboardPage() {
             </Card>
 
             {/* Third Place */}
-            <Card className={`${getRankStyle(2)} order-3 md:order-3 mt-8 md:mt-0`}>
+            <Card className={`${getRankStyle(2)} order-3 md:order-3 mt-8 md:mt-0 hover:scale-105 transition-all duration-200`}>
               <CardContent className="p-3 md:p-6 text-center">
                 <div className="flex justify-center mb-3">{getRankIcon(2)}</div>
                 <Avatar className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 md:mb-3">
@@ -206,7 +206,10 @@ export default function LeaderboardPage() {
         {/* Rest of the leaderboard */}
         <div className="max-w-2xl mx-auto space-y-3">
           {leaderboard.slice(3).map((entry, index) => (
-            <Card key={entry.profile_id} className={getRankStyle(index + 3)}>
+            <Card 
+              key={entry.profile_id} 
+              className={`${getRankStyle(index + 3)} cursor-pointer`}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center justify-center w-8 h-8">{getRankIcon(index + 3)}</div>
