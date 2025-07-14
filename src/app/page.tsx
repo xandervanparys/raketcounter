@@ -83,16 +83,19 @@ export default function HomePage() {
       <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter</h1>
       <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
       <p className="mb-4">
-        Aantal raketten gelanceerd:{" "}
+        Aantal raketten gelanceerd:
         {countLoaded && (
-          <motion.span
-            key={count}
-            initial={{ scale: 1 }}
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 0.4, times: [0, 0.2, 1] }}
-          >
-            <strong>{count}</strong>
-          </motion.span>
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={"count-" + count}
+              initial={{ scale: 1 }}
+              animate={{ scale: [1, 1.2, 1] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, times: [0, 0.2, 1] }}
+            >
+              <strong>{count}</strong>
+            </motion.span>
+          </AnimatePresence>
         )}
       </p>
       <div className="flex flex-col items-center gap-4">
