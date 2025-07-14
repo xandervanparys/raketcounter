@@ -8,6 +8,7 @@ type LeaderboardEntry = {
   profile_id: string
   total: number
   username: string | null
+  avatar_url: string | null
 }
 
 export default function LeaderboardPage() {
@@ -26,30 +27,45 @@ export default function LeaderboardPage() {
 
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username')
+        .select('id, username, avatar_url')
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError)
         return
       }
 
-      const usernameMap = new Map<string, string | null>()
-      profiles.forEach(p => usernameMap.set(p.id, p.username))
+      const profileMap = new Map<
+        string,
+        { username: string | null; avatar_url: string | null }
+      >()
+      profiles.forEach(p => {
+        profileMap.set(p.id, { username: p.username, avatar_url: p.avatar_url })
+      })
 
-      const userTotals: Record<string, { total: number; username: string | null }> = {}
+      const userTotals: Record<
+        string,
+        { total: number; username: string | null; avatar_url: string | null }
+      > = {}
 
       logs.forEach(log => {
         if (!userTotals[log.profile_id]) {
+          const profile = profileMap.get(log.profile_id)
           userTotals[log.profile_id] = {
             total: 0,
-            username: usernameMap.get(log.profile_id) ?? null,
+            username: profile?.username ?? null,
+            avatar_url: profile?.avatar_url ?? null,
           }
         }
         userTotals[log.profile_id].total += log.amount
       })
 
       const sorted = Object.entries(userTotals)
-        .map(([profile_id, { total, username }]) => ({ profile_id, total, username }))
+        .map(([profile_id, { total, username, avatar_url }]) => ({
+          profile_id,
+          total,
+          username,
+          avatar_url,
+        }))
         .sort((a, b) => b.total - a.total)
 
       setLeaderboard(sorted)
@@ -65,7 +81,16 @@ export default function LeaderboardPage() {
       <ul className="space-y-2">
         {leaderboard.map((entry, index) => (
           <li key={entry.profile_id} className="bg-gray-100 p-4 rounded shadow">
-            <strong>#{index + 1}</strong> – {entry.username ?? entry.profile_id} 🚀 {entry.total}
+            <div className="flex items-center gap-3">
+              <img
+                src={entry.avatar_url ?? ''}
+                alt="Avatar"
+                className="w-8 h-8 rounded-md object-cover bg-gray-200"
+              />
+              <div>
+                <strong>#{index + 1}</strong> – {entry.username ?? entry.profile_id} 🚀 {entry.total}
+              </div>
+            </div>
           </li>
         ))}
       </ul>
