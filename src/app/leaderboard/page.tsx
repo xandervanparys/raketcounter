@@ -120,7 +120,7 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-background pt-16">
+      <main className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
@@ -133,7 +133,7 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background pt-16">
+    <main className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
@@ -145,16 +145,16 @@ export default function LeaderboardPage() {
 
         {/* Top 3 Podium */}
         {leaderboard.length >= 3 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8 max-w-4xl mx-auto">
             {/* Second Place */}
             <Card className={`${getRankStyle(1)} order-1 md:order-1`}>
-              <CardContent className="p-6 text-center">
+              <CardContent className="p-3 md:p-6 text-center">
                 <div className="flex justify-center mb-3">{getRankIcon(1)}</div>
-                <Avatar className="w-16 h-16 mx-auto mb-3">
+                <Avatar className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 md:mb-3">
                   <AvatarImage src={leaderboard[1].avatar_url ?? "/ND_default.png"} />
                   <AvatarFallback>{getInitials(leaderboard[1].username, leaderboard[1].profile_id)}</AvatarFallback>
                 </Avatar>
-                <h3 className="font-semibold text-lg mb-1">
+                <h3 className="font-semibold text-sm md:text-lg mb-1 truncate">
                   {leaderboard[1].username ?? `User ${leaderboard[1].profile_id.slice(0, 8)}`}
                 </h3>
                 <Badge variant="secondary" className="mb-2">
@@ -166,32 +166,32 @@ export default function LeaderboardPage() {
 
             {/* First Place */}
             <Card className={`${getRankStyle(0)} order-2 md:order-2 md:scale-110 md:z-10`}>
-              <CardContent className="p-6 text-center">
+              <CardContent className="p-3 md:p-6 text-center">
                 <div className="flex justify-center mb-3">{getRankIcon(0)}</div>
-                <Avatar className="w-20 h-20 mx-auto mb-3 ring-4 ring-yellow-200 dark:ring-yellow-800">
+                <Avatar className="w-14 h-14 md:w-20 md:h-20 mx-auto mb-2 md:mb-3 ring-2 md:ring-4 ring-yellow-200 dark:ring-yellow-800">
                   <AvatarImage src={leaderboard[0].avatar_url ?? "/ND_default.png"} />
                   <AvatarFallback>{getInitials(leaderboard[0].username, leaderboard[0].profile_id)}</AvatarFallback>
                 </Avatar>
-                <h3 className="font-bold text-xl mb-1">
+                <h3 className="font-bold text-sm md:text-xl mb-1 truncate">
                   {leaderboard[0].username ?? `User ${leaderboard[0].profile_id.slice(0, 8)}`}
                 </h3>
                 <Badge className="mb-2 bg-yellow-500 hover:bg-yellow-600">
                   <Rocket className="w-3 h-3 mr-1" />
                   {leaderboard[0].total.toLocaleString()}
                 </Badge>
-                <p className="text-xs text-muted-foreground">👑 Champion</p>
+                <p className="text-xs text-muted-foreground hidden md:block">👑 Champion</p>
               </CardContent>
             </Card>
 
             {/* Third Place */}
             <Card className={`${getRankStyle(2)} order-3 md:order-3`}>
-              <CardContent className="p-6 text-center">
+              <CardContent className="p-3 md:p-6 text-center">
                 <div className="flex justify-center mb-3">{getRankIcon(2)}</div>
-                <Avatar className="w-16 h-16 mx-auto mb-3">
+                <Avatar className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 md:mb-3">
                   <AvatarImage src={leaderboard[2].avatar_url ?? "/ND_default.png"} />
                   <AvatarFallback>{getInitials(leaderboard[2].username, leaderboard[2].profile_id)}</AvatarFallback>
                 </Avatar>
-                <h3 className="font-semibold text-lg mb-1">
+                <h3 className="font-semibold text-sm md:text-lg mb-1 truncate">
                   {leaderboard[2].username ?? `User ${leaderboard[2].profile_id.slice(0, 8)}`}
                 </h3>
                 <Badge variant="secondary" className="mb-2">
