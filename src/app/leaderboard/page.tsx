@@ -80,12 +80,12 @@ export default function LeaderboardPage() {
       <h1 className="text-3xl font-bold mb-6">🏆 Leaderboard</h1>
       <ul className="space-y-2">
         {leaderboard.map((entry, index) => (
-          <li key={entry.profile_id} className="bg-gray-100 p-4 rounded shadow">
+          <li key={entry.profile_id} className="bg-gray-100 dark:bg-gray-800 p-4 rounded shadow">
             <div className="flex items-center gap-3">
               <img
                 src={entry.avatar_url ?? '/ND_default.png'}
                 alt="Avatar"
-                className="w-8 h-8 rounded-md object-cover bg-gray-200"
+                className="w-8 h-8 rounded-md object-cover bg-gray-200 dark:bg-gray-700"
               />
               <div>
                 <strong>#{index + 1}</strong> – {entry.username ?? entry.profile_id} 🚀 {entry.total}
