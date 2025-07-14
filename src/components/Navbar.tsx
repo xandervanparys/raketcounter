@@ -53,7 +53,7 @@ export default function Navbar() {
             </span>
           </button>
           {open && (
-            <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-md z-50">
+            <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-md z-50">
               <button
                 onClick={() => {
                   router.push('/settings')
