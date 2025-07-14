@@ -147,7 +147,7 @@ export default function LeaderboardPage() {
         {leaderboard.length >= 3 && (
           <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8 max-w-4xl mx-auto">
             {/* Second Place */}
-            <Card className={`${getRankStyle(1)} order-1 md:order-1`}>
+            <Card className={`${getRankStyle(1)} order-1 md:order-1 mt-4 md:mt-0`}>
               <CardContent className="p-3 md:p-6 text-center">
                 <div className="flex justify-center mb-3">{getRankIcon(1)}</div>
                 <Avatar className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 md:mb-3">
@@ -184,7 +184,7 @@ export default function LeaderboardPage() {
             </Card>
 
             {/* Third Place */}
-            <Card className={`${getRankStyle(2)} order-3 md:order-3`}>
+            <Card className={`${getRankStyle(2)} order-3 md:order-3 mt-8 md:mt-0`}>
               <CardContent className="p-3 md:p-6 text-center">
                 <div className="flex justify-center mb-3">{getRankIcon(2)}</div>
                 <Avatar className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 md:mb-3">
