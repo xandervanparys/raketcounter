@@ -82,17 +82,19 @@ export default function HomePage() {
       <Navbar />
       <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter</h1>
       <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
-      {countLoaded && (
-        <motion.p
-          key={count}
-          className="mb-4"
-          initial={{ scale: 1 }}
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 0.4, times: [0, 0.2, 1] }}
-        >
-          Aantal raketten gelanceerd: <strong>{count}</strong>
-        </motion.p>
-      )}
+      <p className="mb-4">
+        Aantal raketten gelanceerd:{" "}
+        {countLoaded && (
+          <motion.span
+            key={count}
+            initial={{ scale: 1 }}
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 0.4, times: [0, 0.2, 1] }}
+          >
+            <strong>{count}</strong>
+          </motion.span>
+        )}
+      </p>
       <div className="flex flex-col items-center gap-4">
         <motion.button
           whileTap={{ scale: 0.9 }}
