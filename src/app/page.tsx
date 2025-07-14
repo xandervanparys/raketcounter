@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null)
   const [count, setCount] = useState<number>(0)
+  const [countLoaded, setCountLoaded] = useState(false)
   const router = useRouter()
   const [customAmount, setCustomAmount] = useState<number>(1)
   const [loading, setLoading] = useState(false)
@@ -33,6 +34,7 @@ export default function HomePage() {
 
       if (!error && typeof count === 'number') {
         setCount(count)
+        setCountLoaded(true)
       } else if (error) {
         console.error('Fetch error:', error)
       }
@@ -71,15 +73,15 @@ export default function HomePage() {
       <Navbar />
       <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter</h1>
       <p className="mb-2">Ingelogd als: {user.email}</p>
-      <motion.p
-        className="mb-4"
-        initial={{ scale: 1 }}
-        animate={{ scale: [1, 1.2, 1] }}
-        transition={{ duration: 0.4, times: [0, 0.2, 1] }}
-        key={count} // triggers animation on count change
-      >
-        Aantal raketten gelanceerd: <strong>{count}</strong>
-      </motion.p>
+      {countLoaded && (
+        <motion.p
+          className="mb-4"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 0.4, times: [0, 0.2, 1] }}
+        >
+          Aantal raketten gelanceerd: <strong>{count}</strong>
+        </motion.p>
+      )}
       <div className="flex flex-col items-center gap-4">
         <motion.button
           whileTap={{ scale: 0.9 }}
