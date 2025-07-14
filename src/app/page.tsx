@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [count, setCount] = useState<number>(0);
   const [countLoaded, setCountLoaded] = useState<boolean>(false);
   const router = useRouter();
@@ -24,10 +25,13 @@ export default function HomePage() {
         setUser(data.user);
         const { data: profile, error } = await supabase
           .from("profiles")
-          .select("username")
+          .select("username, avatar_url")
           .eq("id", data.user.id)
           .single();
-        if (!error) setUsername(profile?.username);
+        if (!error && profile) {
+          setUsername(profile.username);
+          setAvatarUrl(profile.avatar_url);
+        }
       }
     });
   }, [router]);
@@ -80,6 +84,13 @@ export default function HomePage() {
       <Navbar />
       <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter</h1>
       <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
+      <div className="mb-4">
+        <img
+          src={avatarUrl ?? "/ND_default.png"}
+          alt="Avatar"
+          className="w-32 h-32 rounded-lg object-cover mx-auto"
+        />
+      </div>
       <p className="mb-4">
         Aantal raketten gelanceerd:{" "}
         {countLoaded ? (
