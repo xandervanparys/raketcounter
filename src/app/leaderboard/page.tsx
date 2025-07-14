@@ -100,7 +100,7 @@ export default function LeaderboardPage() {
       case 1:
         return "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 dark:from-gray-950/20 dark:to-slate-950/20 dark:border-gray-800 hover:scale-105 transition-transform duration-200"
       case 2:
-        return "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 dark:from-amber-950/20 dark:to-orange-950/20 dark:border-amber-800 hover:scale-105 transition-transform duration-200"
+        return "bg-gradient-to-r from-orange-100 to-amber-100 border-orange-300 dark:from-orange-900/20 dark:to-amber-900/20 dark:border-orange-800 hover:scale-105 transition-transform duration-200"
       default:
         return "bg-card border-border hover:bg-muted/50 hover:scale-[1.02] transition-all duration-200"
     }
