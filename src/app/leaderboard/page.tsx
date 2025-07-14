@@ -133,9 +133,9 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex-grow container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
             🏆 Leaderboard
