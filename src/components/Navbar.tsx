@@ -9,6 +9,7 @@ import { Settings, LogOut } from "lucide-react"
 export default function Navbar() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -50,7 +51,7 @@ export default function Navbar() {
               href="/"
               className="text-xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
-              MyApp
+              RaketCounter
             </Link>
           </div>
 
@@ -133,7 +134,7 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button
-              onClick={() => setOpen(!open)}
+              onClick={() => setMobileOpen(!mobileOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
             >
               <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -144,20 +145,20 @@ export default function Navbar() {
         </div>
 
         {/* Mobile menu */}
-        {open && (
+        {mobileOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200 dark:border-gray-700">
               <Link
                 href="/"
                 className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
-                onClick={() => setOpen(false)}
+                onClick={() => setMobileOpen(false)}
               >
                 Home
               </Link>
               <Link
                 href="/leaderboard"
                 className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
-                onClick={() => setOpen(false)}
+                onClick={() => setMobileOpen(false)}
               >
                 Leaderboard
               </Link>
