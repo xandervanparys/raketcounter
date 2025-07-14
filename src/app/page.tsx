@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null)
+  const [username, setUsername] = useState<string | null>(null)
   const [count, setCount] = useState<number>(0)
   const [countLoaded, setCountLoaded] = useState(false)
   const router = useRouter()
@@ -18,9 +19,17 @@ export default function HomePage() {
   const [showCustom, setShowCustom] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) router.push('/login')
-      else setUser(data.user)
+      else {
+        setUser(data.user)
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', data.user.id)
+          .single()
+        if (!error) setUsername(profile?.username)
+      }
     })
   }, [router])
 
@@ -58,7 +67,9 @@ export default function HomePage() {
     setLoading(false)
 
     if (!error) {
+      setCountLoaded(false)
       setCount((prev) => prev + amount)
+      setTimeout(() => setCountLoaded(true), 0)
       setCustomAmount(1)
     } else {
       console.error('Insert error:', error)
@@ -72,7 +83,7 @@ export default function HomePage() {
     <main className="p-8 text-center">
       <Navbar />
       <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter</h1>
-      <p className="mb-2">Ingelogd als: {user.email}</p>
+      <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
       {countLoaded && (
         <motion.p
           className="mb-4"
