@@ -11,6 +11,7 @@ export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [count, setCount] = useState<number>(0);
+  const [countLoaded, setCountLoaded] = useState<boolean>(false);
   const router = useRouter();
   const [customAmount, setCustomAmount] = useState<number>(1);
   const [loading, setLoading] = useState(false);
@@ -42,6 +43,7 @@ export default function HomePage() {
       if (!error && data) {
         const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
         setCount(totalAmount);
+        setCountLoaded(true);
       }
     };
 
@@ -80,14 +82,18 @@ export default function HomePage() {
       <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
       <p className="mb-4">
         Aantal raketten gelanceerd:{" "}
+        {countLoaded ?
         <motion.div
-          key={count}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: [1, 1.3, 1] }}
-          transition={{ duration: 0.5, times: [0, 0.5, 1] }}
-        >
-          <strong>{count}</strong>
-        </motion.div>
+        key={count}
+        animate={{ scale: [1, 1.3, 1] }}
+        transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+      >
+        <strong>{count}</strong>
+      </motion.div>
+      : 
+      "loading..."
+      }
+        
       </p>
       <div className="flex flex-col items-center gap-4">
         <motion.button
