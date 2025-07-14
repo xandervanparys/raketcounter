@@ -31,7 +31,6 @@ export default function SettingsPage() {
     fetchUsername()
   }, [])
 
-  // Extract avatar upload logic to a separate function
   const uploadAvatar = async (userId: string): Promise<string | null> => {
     if (!avatarFile) return null
     const { error: uploadError } = await supabase.storage
@@ -46,7 +45,6 @@ export default function SettingsPage() {
     return supabase.storage.from('avatars').getPublicUrl(`public/${userId}`).data.publicUrl
   }
 
-  // Simplified and renamed updateProfile function
   const updateProfile = async () => {
     setLoading(true)
     setMessage('')

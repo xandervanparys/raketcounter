@@ -32,7 +32,6 @@ export default function Navbar() {
 
   return (
     <nav className="relative mb-6 flex justify-center items-center">
-      {/* Centered links */}
       <div className="flex gap-6">
         <Link href="/" className="underline text-blue-600">
           Home
@@ -42,7 +41,6 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {/* Avatar dropdown in the top right */}
       {userEmail && (
         <div className="absolute right-4" ref={menuRef}>
           <button
