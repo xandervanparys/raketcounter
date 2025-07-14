@@ -5,13 +5,12 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [count, setCount] = useState<number>(0);
-  const [countLoaded, setCountLoaded] = useState(false);
   const router = useRouter();
   const [customAmount, setCustomAmount] = useState<number>(1);
   const [loading, setLoading] = useState(false);
@@ -43,7 +42,6 @@ export default function HomePage() {
       if (!error && data) {
         const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
         setCount(totalAmount);
-        setCountLoaded(true);
       }
     };
 
@@ -65,9 +63,7 @@ export default function HomePage() {
     setLoading(false);
 
     if (!error) {
-      setCountLoaded(false);
       setCount((prev) => prev + amount);
-      setTimeout(() => setCountLoaded(true), 0);
       setCustomAmount(1);
     } else {
       console.error("Insert error:", error);
@@ -84,15 +80,7 @@ export default function HomePage() {
       <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
       <p className="mb-4">
         Aantal raketten gelanceerd:{" "}
-        {countLoaded && (
-          <motion.span
-            key="count"
-            animate={countLoaded ? { scale: [1, 1.3, 1] } : { scale: 1 }}
-            transition={{ duration: 0.3, times: [0, 0.5, 1] }}
-          >
-            <strong>{count}</strong>
-          </motion.span>
-        )}
+        <strong>{count}</strong>
       </p>
       <div className="flex flex-col items-center gap-4">
         <motion.button
@@ -120,33 +108,25 @@ export default function HomePage() {
           {showCustom ? "Sluit custom input" : "Voer custom aantal in"}
         </button>
 
-        <AnimatePresence>
-          {showCustom && (
-            <motion.div
-              className="flex gap-2 mt-2"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
+        {showCustom && (
+          <div className="flex gap-2 mt-2">
+            <input
+              type="number"
+              min="1"
+              value={customAmount}
+              onChange={(e) => setCustomAmount(Number(e.target.value))}
+              className="border px-3 py-2 rounded w-24 text-center"
+            />
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => logRaket(customAmount)}
+              className="bg-green-600 text-white px-4 py-2 rounded"
+              disabled={loading}
             >
-              <input
-                type="number"
-                min="1"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(Number(e.target.value))}
-                className="border px-3 py-2 rounded w-24 text-center"
-              />
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => logRaket(customAmount)}
-                className="bg-green-600 text-white px-4 py-2 rounded"
-                disabled={loading}
-              >
-                Log custom amount
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              Log custom amount
+            </motion.button>
+          </div>
+        )}
       </div>
     </main>
   );
