@@ -91,7 +91,7 @@ export default function HomePage() {
         <strong>{count}</strong>
       </motion.div>
       : 
-      "loading..."
+      <div>loading...</div>
       }
         
       </p>
