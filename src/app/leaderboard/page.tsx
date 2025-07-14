@@ -5,8 +5,9 @@ import { supabase } from '@/lib/supabase'
 import Navbar from '@/components/Navbar'
 
 type LeaderboardEntry = {
-  user_id: string
+  profile_id: string
   total: number
+  username: string | null
 }
 
 export default function LeaderboardPage() {
@@ -16,21 +17,26 @@ export default function LeaderboardPage() {
     const fetchLeaderboard = async () => {
       const { data, error } = await supabase
         .from('raket_logs')
-        .select('user_id, amount')
-      
+        .select('profile_id, amount, profiles(username)')
+        .order('amount', { ascending: false })
+
       if (error) {
         console.error('Error fetching leaderboard:', error)
         return
       }
 
-      const userTotals: Record<string, number> = {}
-      data?.forEach((log: { user_id: string; amount: number }) => {
-        if (!userTotals[log.user_id]) userTotals[log.user_id] = 0
-        userTotals[log.user_id] += log.amount
+      const userTotals: Record<string, { total: number; username: string | null }> = {}
+
+      data?.forEach((log: { profile_id: string; amount: number; profiles: { username: string | null }[] }) => {
+        const profile = log.profiles[0];
+        if (!userTotals[log.profile_id]) {
+          userTotals[log.profile_id] = { total: 0, username: profile?.username ?? null }
+        }
+        userTotals[log.profile_id].total += log.amount
       })
 
       const sorted = Object.entries(userTotals)
-        .map(([user_id, total]) => ({ user_id, total }))
+        .map(([profile_id, { total, username }]) => ({ profile_id, total, username }))
         .sort((a, b) => b.total - a.total)
 
       setLeaderboard(sorted)
@@ -45,8 +51,8 @@ export default function LeaderboardPage() {
       <h1 className="text-3xl font-bold mb-6">🏆 Leaderboard</h1>
       <ul className="space-y-2">
         {leaderboard.map((entry, index) => (
-          <li key={entry.user_id} className="bg-gray-100 p-4 rounded shadow">
-            <strong>#{index + 1}</strong> – {entry.user_id} 🚀 {entry.total}
+          <li key={entry.profile_id} className="bg-gray-100 p-4 rounded shadow">
+            <strong>#{index + 1}</strong> – {entry.username ?? entry.profile_id} 🚀 {entry.total}
           </li>
         ))}
       </ul>

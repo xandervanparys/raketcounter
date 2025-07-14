@@ -26,7 +26,7 @@ export default function HomePage() {
       const { count, error } = await supabase
         .from('raket_logs')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+        .eq('profile_id', user.id)
 
       if (!error && typeof count === 'number') {
         setCount(count)
@@ -39,7 +39,7 @@ export default function HomePage() {
   const prikEenRaket = async () => {
     if (!user) return
     await supabase.from('raket_logs').insert({
-      user_id: user.id,
+      profile_id: user.id,
       amount: 1,
     })
     alert('🚀 Raket gelanceerd!')
@@ -49,7 +49,7 @@ export default function HomePage() {
   const zetEenBak = async () => {
     if (!user) return
     await supabase.from('raket_logs').insert({
-      user_id: user.id,
+      profile_id: user.id,
       amount: 24,
     })
     alert('🛸 Ufo gelanceerd!')
@@ -64,7 +64,7 @@ export default function HomePage() {
   }
 
   await supabase.from('raket_logs').insert({
-    user_id: user.id,
+    profile_id: user.id,
     amount: customAmount,
   })
   alert(`✅ ${customAmount} raket(ten) gelanceerd!`)
