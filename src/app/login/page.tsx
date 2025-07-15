@@ -1,10 +1,9 @@
-'use client'
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+"use client";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [displayName, setDisplayName] = useState('')
+  const [email, setEmail] = useState("");
 
   const loginWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({ provider: 'google' })
@@ -13,13 +12,10 @@ export default function LoginPage() {
   const loginWithEmail = async () => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        data: { display_name: displayName }
-      }
-    })
-    if (error) alert(error.message)
-    else alert('Check your email for the login link!')
-  }
+    });
+    if (error) alert(error.message);
+    else alert("Check your email for the login link!");
+  };
 
   return (
     <main className="p-8 text-center">
@@ -31,13 +27,6 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="border px-3 py-2 rounded mr-2"
-        />
-        <input
-          type="text"
-          placeholder="Display name"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          className="border px-3 py-2 rounded mr-2 mt-2"
         />
         <button
           onClick={loginWithEmail}
@@ -53,5 +42,5 @@ export default function LoginPage() {
         Log in with Google
       </button>
     </main>
-  )
+  );
 }
