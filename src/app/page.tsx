@@ -70,7 +70,7 @@ export default function HomePage() {
         setFrisdrankCountLoaded(true);
       }
     };
-    
+
     fetchCount();
   }, [user]);
 
@@ -108,9 +108,12 @@ export default function HomePage() {
     });
     setLoading(false);
 
-    if (error) {
+    if (!error) {
+      setFrisdrankCount((prev) => prev + amount);
+    } else {
       console.error("Insert error:", error);
-      alert("❌ Kon geen ND drank loggen."); 
+      alert("❌ Kon geen ND drank loggen.");
+    } 
   };
 
   if (!user) return null;
