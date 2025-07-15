@@ -70,6 +70,12 @@ export default function Navbar() {
               >
                 Leaderboard
               </Link>
+              <Link
+                href="/ndboard"
+                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+              >
+                NDbord
+              </Link>
             </div>
           </div>
 
