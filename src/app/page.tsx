@@ -110,8 +110,7 @@ export default function HomePage() {
 
     if (error) {
       console.error("Insert error:", error);
-      alert("❌ Kon geen ND drank loggen.");
-      
+      alert("❌ Kon geen ND drank loggen."); 
   };
 
   if (!user) return null;
@@ -215,4 +214,5 @@ export default function HomePage() {
       </div>
     </main>
   );
+}
 }
