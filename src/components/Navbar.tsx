@@ -168,6 +168,13 @@ export default function Navbar() {
               >
                 Leaderboard
               </Link>
+              <Link
+                href="/ndboard"
+                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+                onClick={() => setMobileOpen(false)}
+              >
+                NDboard
+              </Link>
             </div>
           </div>
         )}
