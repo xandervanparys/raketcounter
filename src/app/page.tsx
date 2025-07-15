@@ -77,6 +77,25 @@ export default function HomePage() {
     }
   };
 
+  const logND = async (amount: number) => {
+
+    if (!user || loading) return;
+
+    setLoading(true);
+    const { error } = await supabase.from("frisdrank_logs").insert({
+      profile_id: user.id,
+      amount, // You can adjust the amount here
+    });
+    setLoading(false);
+
+    if (!error) {
+      alert("🏳️‍🌈 ND geregistreerd!");
+    } else {
+      console.error("Insert error:", error);
+      alert("❌ Kon geen ND drank loggen.");
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -151,6 +170,15 @@ export default function HomePage() {
               </motion.button>
             </div>
           )}
+
+            <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => logND(1)}
+            className="bg-pink-600 text-white px-4 py-2 rounded"
+            disabled={loading}
+          >
+            ND button 🏳️‍🌈
+          </motion.button>
         </div>
       </div>
     </main>
