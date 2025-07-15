@@ -70,7 +70,7 @@ export default function HomePage() {
         setFrisdrankCountLoaded(true);
       }
     };
-
+    
     fetchCount();
   }, [user]);
 
