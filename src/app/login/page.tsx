@@ -10,7 +10,7 @@ export default function LoginPage() {
       provider: 'google',
       options: {
         redirectTo: typeof window !== "undefined" 
-          ? `${window.location.origin}/auth/callback`
+          ? `${window.location.origin}/`
           : undefined,
       },
     });
