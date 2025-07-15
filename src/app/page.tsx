@@ -19,6 +19,7 @@ export default function HomePage() {
   const [customAmount, setCustomAmount] = useState<number>(1)
   const [loading, setLoading] = useState(false)
   const [showCustom, setShowCustom] = useState(false)
+  const [flyingRockets, setFlyingRockets] = useState<Array<{ id: number; delay: number }>>([])
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -70,6 +71,19 @@ export default function HomePage() {
       alert("Geen negatieve pinten fucking ND.")
       return
     }
+
+    // Trigger flying rocket animations
+    const newRockets = Array.from({ length: Math.min(amount, 10) }, (_, i) => ({
+      id: Date.now() + i,
+      delay: i * 100, // Stagger the rockets
+    }))
+    setFlyingRockets((prev) => [...prev, ...newRockets])
+
+    // Clean up rockets after animation
+    setTimeout(() => {
+      setFlyingRockets((prev) => prev.filter((rocket) => !newRockets.find((nr) => nr.id === rocket.id)))
+    }, 3000)
+
     setLoading(true)
     const { error } = await supabase.from("raket_logs").insert({
       profile_id: user.id,
@@ -305,7 +319,15 @@ export default function HomePage() {
             <motion.button
               whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)" }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => logRaket(24)}
+              onClick={() => {
+                logRaket(24)
+                // Add extra sparkle effect for Bak
+                const sparkles = Array.from({ length: 20 }, (_, i) => ({
+                  id: Date.now() + 1000 + i,
+                  delay: i * 50,
+                }))
+                // You can add sparkle state and animation here if desired
+              }}
               disabled={loading}
               className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-8 py-5 rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4 group relative overflow-hidden"
             >
@@ -394,6 +416,72 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
           )}
+        </AnimatePresence>
+        {/* Flying Rockets Animation */}
+        <AnimatePresence>
+          {flyingRockets.map((rocket) => (
+            <motion.div
+              key={rocket.id}
+              initial={{
+                x: "50vw",
+                y: "80vh",
+                scale: 1,
+                rotate: -45,
+                opacity: 1,
+              }}
+              animate={{
+                x: [null, "60vw", "120vw"],
+                y: [null, "20vh", "-20vh"],
+                scale: [1, 1.5, 0.5],
+                rotate: [-45, -30, -15],
+                opacity: [1, 1, 0],
+              }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 2.5,
+                delay: rocket.delay / 1000,
+                ease: "easeOut",
+                times: [0, 0.3, 1],
+              }}
+              className="fixed pointer-events-none z-50 text-4xl"
+              style={{
+                filter: "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))",
+              }}
+            >
+              🚀
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {/* Rocket Trail Effect */}
+        <AnimatePresence>
+          {flyingRockets.map((rocket) => (
+            <motion.div
+              key={`trail-${rocket.id}`}
+              initial={{
+                x: "50vw",
+                y: "80vh",
+                opacity: 0,
+              }}
+              animate={{
+                x: ["50vw", "60vw", "120vw"],
+                y: ["80vh", "20vh", "-20vh"],
+                opacity: [0, 0.6, 0],
+              }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 2.5,
+                delay: rocket.delay / 1000,
+                ease: "easeOut",
+              }}
+              className="fixed pointer-events-none z-40"
+            >
+              <div
+                className="w-1 h-20 bg-gradient-to-t from-orange-400 via-yellow-300 to-transparent rounded-full transform rotate-45"
+                style={{ filter: "blur(2px)" }}
+              />
+            </motion.div>
+          ))}
         </AnimatePresence>
       </main>
     </div>
