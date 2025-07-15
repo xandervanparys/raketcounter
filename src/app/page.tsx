@@ -11,8 +11,10 @@ export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [count, setCount] = useState<number>(0);
-  const [countLoaded, setCountLoaded] = useState<boolean>(false);
+  const [raketCount, setRaketCount] = useState<number>(0);
+  const [raketCountLoaded, setRaketCountLoaded] = useState<boolean>(false);
+  const [frisdrankCount, setFrisdrankCount] = useState<number>(0);
+  const [frisdrankCountLoaded, setFrisdrankCountLoaded] = useState<boolean>(false);
   const router = useRouter();
   const [customAmount, setCustomAmount] = useState<number>(1);
   const [loading, setLoading] = useState(false);
@@ -46,8 +48,26 @@ export default function HomePage() {
 
       if (!error && data) {
         const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
-        setCount(totalAmount);
-        setCountLoaded(true);
+        setRaketCount(totalAmount);
+        setRaketCountLoaded(true);
+      }
+    };
+
+    fetchCount();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("frisdrank_logs")
+        .select("amount")
+        .eq("profile_id", user.id);
+
+      if (!error && data) {
+        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
+        setFrisdrankCount(totalAmount);
+        setFrisdrankCountLoaded(true);
       }
     };
 
@@ -69,11 +89,30 @@ export default function HomePage() {
     setLoading(false);
 
     if (!error) {
-      setCount((prev) => prev + amount);
+      setRaketCount((prev) => prev + amount);
       setCustomAmount(1);
     } else {
       console.error("Insert error:", error);
       alert("❌ Kon geen raket loggen.");
+    }
+  };
+
+  const logND = async (amount: number) => {
+
+    if (!user || loading) return;
+
+    setLoading(true);
+    const { error } = await supabase.from("frisdrank_logs").insert({
+      profile_id: user.id,
+      amount, // You can adjust the amount here
+    });
+    setLoading(false);
+
+    if (!error) {
+      alert("🏳️‍🌈 ND drank geregistreerd!");
+    } else {
+      console.error("Insert error:", error);
+      alert("❌ Kon geen ND drank loggen.");
     }
   };
 
@@ -94,13 +133,27 @@ export default function HomePage() {
         </div>
         <p className="mb-4">
           Aantal raketten gelanceerd:{" "}
-          {countLoaded ? (
+          {raketCountLoaded ? (
             <motion.div
-              key={count}
+              key={raketCount}
               animate={{ scale: [1, 1.3, 1] }}
               transition={{ duration: 0.5, times: [0, 0.5, 1] }}
             >
-              <strong>{count}</strong>
+              <strong>{raketCount}</strong>
+            </motion.div>
+          ) : (
+            <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
+          )}
+        </p>
+        <p className="mb-4">
+          Aantal ND dranken gedronken:{" "}
+          {frisdrankCountLoaded ? (
+            <motion.div
+              key={frisdrankCount}
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+            >
+              <strong>{frisdrankCount}</strong>
             </motion.div>
           ) : (
             <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
@@ -151,6 +204,15 @@ export default function HomePage() {
               </motion.button>
             </div>
           )}
+
+            <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => logND(1)}
+            className="bg-pink-600 text-white px-4 py-2 rounded"
+            disabled={loading}
+          >
+            ND button 🏳️‍🌈
+          </motion.button>
         </div>
       </div>
     </main>
