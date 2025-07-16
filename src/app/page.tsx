@@ -1,141 +1,136 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
-import Navbar from "@/components/Navbar";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+import type { User } from "@supabase/supabase-js"
+import Navbar from "@/components/Navbar"
+import { motion } from "framer-motion"
 
 export default function HomePage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [raketCount, setRaketCount] = useState<number>(0);
-  const [raketCountLoaded, setRaketCountLoaded] = useState<boolean>(false);
-  const [frisdrankCount, setFrisdrankCount] = useState<number>(0);
-  const [frisdrankCountLoaded, setFrisdrankCountLoaded] = useState<boolean>(false);
-  const router = useRouter();
-  const [customAmount, setCustomAmount] = useState<number>(1);
-  const [loading, setLoading] = useState(false);
-  const [showCustomRaket, setShowCustomRaket] = useState(false);
-  const [showCustomTraktaat, setShowCustomTraktaat] = useState(false);
+  const [user, setUser] = useState<User | null>(null)
+  const [username, setUsername] = useState<string | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [raketCount, setRaketCount] = useState<number>(0)
+  const [raketCountLoaded, setRaketCountLoaded] = useState<boolean>(false)
+  const [frisdrankCount, setFrisdrankCount] = useState<number>(0)
+  const [frisdrankCountLoaded, setFrisdrankCountLoaded] = useState<boolean>(false)
+  const [strepenCount, setStrepenCount] = useState<number>(0)
+  const [strepenCountLoaded, setStrepenCountLoaded] = useState<boolean>(false)
+  const [loading, setLoading] = useState(false)
+  const [buzzing, setBuzzing] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) router.push("/login");
+      if (!data.user) router.push("/login")
       else {
-        setUser(data.user);
+        setUser(data.user)
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("username, avatar_url")
           .eq("id", data.user.id)
-          .single();
+          .single()
         if (!error && profile) {
-          setUsername(profile.username);
-          setAvatarUrl(profile.avatar_url);
+          setUsername(profile.username)
+          setAvatarUrl(profile.avatar_url)
         }
       }
-    });
-  }, [router]);
+    })
+  }, [router])
 
   useEffect(() => {
     const fetchCount = async () => {
-      if (!user) return;
-      const { data, error } = await supabase
-        .from("raket_logs")
-        .select("amount")
-        .eq("profile_id", user.id);
-
+      if (!user) return
+      const { data, error } = await supabase.from("raket_logs").select("amount").eq("profile_id", user.id)
       if (!error && data) {
-        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
-        setRaketCount(totalAmount);
-        setRaketCountLoaded(true);
+        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0)
+        setRaketCount(totalAmount)
+        setRaketCountLoaded(true)
       }
-    };
-
-    fetchCount();
-  }, [user]);
-
-  useEffect(() => {
-    const fetchCount = async () => {
-      if (!user) return;
-      const { data, error } = await supabase
-        .from("frisdrank_logs")
-        .select("amount")
-        .eq("profile_id", user.id);
-
-      if (!error && data) {
-        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
-        setFrisdrankCount(totalAmount);
-        setFrisdrankCountLoaded(true);
-      }
-    };
-
-    fetchCount();
-  }, [user]);
-
-  const logRaket = async (amount: number) => {
-    if (!user || loading) return;
-    if (amount <= 0) {
-      alert("Geen negatieve pinten fucking ND.");
-      return;
     }
+    fetchCount()
+  }, [user])
 
-    setLoading(true);
+  useEffect(() => {
+    const fetchCount = async () => {
+      if (!user) return
+      const { data, error } = await supabase.from("frisdrank_logs").select("amount").eq("profile_id", user.id)
+      if (!error && data) {
+        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0)
+        setFrisdrankCount(totalAmount)
+        setFrisdrankCountLoaded(true)
+      }
+    }
+    fetchCount()
+  }, [user])
+
+  const logRaket = async () => {
+    if (!user || loading) return
+    setLoading(true)
     const { error } = await supabase.from("raket_logs").insert({
       profile_id: user.id,
-      amount,
-    });
-    setLoading(false);
-
+      amount: 1,
+    })
+    setLoading(false)
     if (!error) {
-      setRaketCount((prev) => prev + amount);
-      setCustomAmount(1);
+      setRaketCount((prev) => prev + 1)
     } else {
-      console.error("Insert error:", error);
-      alert("❌ Kon geen raket loggen.");
+      console.error("Insert error:", error)
+      alert("❌ Kon geen raket loggen.")
     }
-  };
+  }
 
-  const logND = async (amount: number) => {
+  const logND = async () => {
+    logFrisdrank()
+    logStrepen(1)
+  }
 
-    if (!user || loading) return;
-
-    setLoading(true);
+  const logFrisdrank = async () => {
+    if (!user || loading) return
+    setLoading(true)
     const { error } = await supabase.from("frisdrank_logs").insert({
       profile_id: user.id,
-      amount, // You can adjust the amount here
-    });
-    setLoading(false);
-
+      amount: 1,
+    })
     if (!error) {
-      setFrisdrankCount((prev) => prev + amount);
+      setFrisdrankCount((prev) => prev + 1)
     } else {
-      console.error("Insert error:", error);
-      alert("❌ Kon geen ND drank loggen.");
-    } 
-  };
+      console.error("Insert error:", error)
+      alert("❌ Kon geen ND drank loggen.")
+    }
+    setLoading(false)
+  }
 
-  const logTraktaat = async (amount: number) => {
-    if (!user || loading) return;
-
-    setLoading(true);
-    const { error } = await supabase.from("traktaat_logs").insert({
+  const logStrepen = async (amount: number) => {
+    if (!user || loading) return
+    setLoading(true)
+    const { error } = await supabase.from("strepen_logs").insert({
       profile_id: user.id,
-      amount, // You can adjust the amount here
-    });
-    setLoading(false);
-
+      amount: 1,
+    })
     if (!error) {
-      setFrisdrankCount((prev) => prev + amount);
+      setStrepenCount((prev) => prev + 1)
     } else {
-      console.error("Insert error:", error);
-      alert("❌ Kon geen traktaat loggen.");
-    } 
-  };
+      console.error("Insert error:", error)
+      alert("❌ Kon geen streep loggen.")
+    }
+    setLoading(false)
+  }
 
-  if (!user) return null;
+  const handleBuzz = () => {
+    setBuzzing(true)
+    // Add vibration if supported
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200])
+    }
+    setTimeout(() => {
+      setBuzzing(false)
+      alert("🔔 Buzzed!")
+    }, 600)
+  }
+
+  if (!user) return null
 
   return (
     <main className="p-8 text-center">
@@ -178,90 +173,61 @@ export default function HomePage() {
             <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
           )}
         </p>
-        <div className="flex flex-col items-center gap-4">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => logRaket(1)}
-            className="bg-green-600 text-white px-4 py-2 rounded"
-            disabled={loading}
-          >
-            Lanceer een raket 🚀
-          </motion.button>
 
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => logRaket(24)}
-            className="bg-green-600 text-white px-4 py-2 rounded"
-            disabled={loading}
-          >
-            Zet een Bak 🛸
-          </motion.button>
-
-          <button
-            onClick={() => setShowCustomRaket((prev) => !prev)}
-            className="text-sm underline text-blue-600"
-          >
-            {showCustomRaket ? "Sluit custom input" : "Voer custom aantal in"}
-          </button>
-
-          {showCustomRaket && (
-            <div className="flex gap-2 mt-2">
-              <input
-                type="number"
-                min="1"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(Number(e.target.value))}
-                className="border px-3 py-2 rounded w-24 text-center"
-              />
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => logRaket(customAmount)}
-                className="bg-green-600 text-white px-4 py-2 rounded"
-                disabled={loading}
-              >
-                Log custom amount
-              </motion.button>
-            </div>
-          )}
-
-          <button
-            onClick={() => setShowCustomTraktaat((prev) => !prev)}
-            className="text-sm underline text-blue-600"
-          >
-            {showCustomTraktaat ? "Sluit traktaat input" : "Geef een traktaat"}
-          </button>
-
-          {showCustomTraktaat && (
-            <div className="flex gap-2 mt-2">
-              <input
-                type="number"
-                min="1"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(Number(e.target.value))}
-                className="border px-3 py-2 rounded w-24 text-center"
-              />
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => logTraktaat(customAmount)}
-                className="bg-amber-500 text-white px-4 py-2 rounded"
-                disabled={loading}
-              >
-                Geef traktaat 🍻
-              </motion.button>
-            </div>
-          )}
-
+        <div className="space-y-4 w-full max-w-md mx-auto">
+          {/* Main action buttons */}
+          <div className="grid grid-cols-2 gap-4">
             <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={logRaket}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
+              disabled={loading}
+            >
+              Lanceer een raket 🚀
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => logStrepen(1)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
+              disabled={loading}
+            >
+              Strepen zetten ✏️
+            </motion.button>
+          </div>
+
+          {/* ND button - full width */}
+          <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => logND(1)}
-            className="bg-pink-600 text-white px-4 py-2 rounded"
+            onClick={logND}
+            className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
             disabled={loading}
           >
             ND button 🏳️‍🌈
           </motion.button>
 
+          {/* Emergency Buzz button - prominent and centered */}
+          <div className="pt-4">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              animate={
+                buzzing
+                  ? {
+                      scale: [1, 1.1, 1],
+                      rotate: [0, -5, 5, -5, 0],
+                      backgroundColor: ["#dc2626", "#ef4444", "#dc2626"],
+                    }
+                  : {}
+              }
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              onClick={handleBuzz}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-full h-20 w-20 flex flex-col items-center justify-center shadow-lg mx-auto font-bold text-sm transition-all duration-200 border-4 border-red-800"
+              disabled={buzzing}
+            >
+              <span>BUZZ</span>
+            </motion.button>
+          </div>
         </div>
       </div>
     </main>
-  );
+  )
 }
