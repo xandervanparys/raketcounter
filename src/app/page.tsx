@@ -15,8 +15,6 @@ export default function HomePage() {
   const [raketCountLoaded, setRaketCountLoaded] = useState<boolean>(false);
   const [frisdrankCount, setFrisdrankCount] = useState<number>(0);
   const [frisdrankCountLoaded, setFrisdrankCountLoaded] = useState<boolean>(false);
-  const [traktaatCount, setTraktaatCount] = useState<number>(0);
-  const [traktaatCountLoaded, setTraktaatCountLoaded] = useState<boolean>(false);
   const router = useRouter();
   const [customAmount, setCustomAmount] = useState<number>(1);
   const [loading, setLoading] = useState(false);
@@ -120,7 +118,21 @@ export default function HomePage() {
   };
 
   const logTraktaat = async (amount: number) => {
+    if (!user || loading) return;
 
+    setLoading(true);
+    const { error } = await supabase.from("traktaat_logs").insert({
+      profile_id: user.id,
+      amount, // You can adjust the amount here
+    });
+    setLoading(false);
+
+    if (!error) {
+      setFrisdrankCount((prev) => prev + amount);
+    } else {
+      console.error("Insert error:", error);
+      alert("❌ Kon geen traktaat loggen.");
+    } 
   };
 
   if (!user) return null;
@@ -230,7 +242,7 @@ export default function HomePage() {
               />
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={() => logRaket(customAmount)}
+                onClick={() => logTraktaat(customAmount)}
                 className="bg-amber-500 text-white px-4 py-2 rounded"
                 disabled={loading}
               >
