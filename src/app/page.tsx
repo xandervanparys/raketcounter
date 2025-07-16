@@ -109,11 +109,11 @@ export default function HomePage() {
     setLoading(false);
 
     if (!error) {
-      alert("🏳️‍🌈 ND drank geregistreerd!");
+      setFrisdrankCount((prev) => prev + amount);
     } else {
       console.error("Insert error:", error);
       alert("❌ Kon geen ND drank loggen.");
-    }
+    } 
   };
 
   if (!user) return null;
