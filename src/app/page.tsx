@@ -19,6 +19,8 @@ export default function HomePage() {
   const [strepenCountLoaded, setStrepenCountLoaded] = useState<boolean>(false)
   const [loading, setLoading] = useState(false)
   const [buzzing, setBuzzing] = useState(false)
+  const [buzzAmount, setBuzzAmount] = useState<string>("")
+  const [showBuzzInput, setShowBuzzInput] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -60,6 +62,19 @@ export default function HomePage() {
         const totalAmount = data.reduce((sum, log) => sum + log.amount, 0)
         setFrisdrankCount(totalAmount)
         setFrisdrankCountLoaded(true)
+      }
+    }
+    fetchCount()
+  }, [user])
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      if (!user) return
+      const { data, error } = await supabase.from("strepen_logs").select("amount").eq("profile_id", user.id)
+      if (!error && data) {
+        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0)
+        setStrepenCount(totalAmount)
+        setStrepenCountLoaded(true)
       }
     }
     fetchCount()
@@ -107,20 +122,19 @@ export default function HomePage() {
     setLoading(true)
     const { error } = await supabase.from("strepen_logs").insert({
       profile_id: user.id,
-      amount: 1,
+      amount,
     })
+    setLoading(false)
     if (!error) {
-      setStrepenCount((prev) => prev + 1)
+      setStrepenCount((prev) => prev + amount)
     } else {
       console.error("Insert error:", error)
       alert("❌ Kon geen streep loggen.")
     }
-    setLoading(false)
   }
 
   const handleBuzz = () => {
     setBuzzing(true)
-    // Add vibration if supported
     if (navigator.vibrate) {
       navigator.vibrate([200, 100, 200])
     }
@@ -128,6 +142,17 @@ export default function HomePage() {
       setBuzzing(false)
       alert("🔔 Buzzed!")
     }, 600)
+  }
+
+  const handleBuzzSubmit = async () => {
+    const amount = parseInt(buzzAmount)
+    if (isNaN(amount) || amount <= 0) {
+      alert("Voer een geldig positief getal in")
+      return
+    }
+    await logStrepen(amount)
+    setBuzzAmount("")
+    setShowBuzzInput(false)
   }
 
   if (!user) return null
@@ -173,10 +198,32 @@ export default function HomePage() {
             <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
           )}
         </p>
+        <p className="mb-4">
+          Aantal strepen gezet:{" "}
+          {strepenCountLoaded ? (
+            <motion.div
+              key={strepenCount}
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+            >
+              <strong>{strepenCount}</strong>
+            </motion.div>
+          ) : (
+            <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
+          )}
+        </p>
 
         <div className="space-y-4 w-full max-w-md mx-auto">
-          {/* Main action buttons */}
+          {/* Switched buttons */}
           <div className="grid grid-cols-2 gap-4">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={logND}
+              className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
+              disabled={loading}
+            >
+              ND button 🏳️‍🌈
+            </motion.button>
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={logRaket}
@@ -185,27 +232,18 @@ export default function HomePage() {
             >
               Lanceer een raket 🚀
             </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => logStrepen(1)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
-              disabled={loading}
-            >
-              Strepen zetten ✏️
-            </motion.button>
           </div>
 
-          {/* ND button - full width */}
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={logND}
-            className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
+            onClick={() => logStrepen(1)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
             disabled={loading}
           >
-            ND button 🏳️‍🌈
+            Streep zetten ✏️
           </motion.button>
 
-          {/* Emergency Buzz button - prominent and centered */}
+          {/* BUZZ button and input */}
           <div className="pt-4">
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -219,12 +257,33 @@ export default function HomePage() {
                   : {}
               }
               transition={{ duration: 0.6, ease: "easeInOut" }}
-              onClick={handleBuzz}
-              className="bg-red-600 hover:bg-red-700 text-white rounded-full h-20 w-20 flex flex-col items-center justify-center shadow-lg mx-auto font-bold text-sm transition-all duration-200 border-4 border-red-800"
+              onClick={() => setShowBuzzInput((prev) => !prev)}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-full h-20 w-20 flex items-center justify-center shadow-lg mx-auto font-bold text-sm transition-all duration-200 border-4 border-red-800"
               disabled={buzzing}
             >
               <span>BUZZ</span>
             </motion.button>
+
+            {showBuzzInput && (
+              <div className="mt-4 flex items-center justify-center space-x-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={buzzAmount}
+                  onChange={(e) => setBuzzAmount(e.target.value)}
+                  placeholder="Aantal strepen"
+                  className="border border-gray-300 rounded px-3 py-2 w-32 text-center"
+                  disabled={loading}
+                />
+                <button
+                  onClick={handleBuzzSubmit}
+                  disabled={loading}
+                  className="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 font-semibold transition-colors disabled:opacity-50"
+                >
+                  Log strepen
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
