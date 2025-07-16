@@ -15,10 +15,13 @@ export default function HomePage() {
   const [raketCountLoaded, setRaketCountLoaded] = useState<boolean>(false);
   const [frisdrankCount, setFrisdrankCount] = useState<number>(0);
   const [frisdrankCountLoaded, setFrisdrankCountLoaded] = useState<boolean>(false);
+  const [traktaatCount, setTraktaatCount] = useState<number>(0);
+  const [traktaatCountLoaded, setTraktaatCountLoaded] = useState<boolean>(false);
   const router = useRouter();
   const [customAmount, setCustomAmount] = useState<number>(1);
   const [loading, setLoading] = useState(false);
-  const [showCustom, setShowCustom] = useState(false);
+  const [showCustomRaket, setShowCustomRaket] = useState(false);
+  const [showCustomTraktaat, setShowCustomTraktaat] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -116,6 +119,10 @@ export default function HomePage() {
     } 
   };
 
+  const logTraktaat = async (amount: number) => {
+
+  };
+
   if (!user) return null;
 
   return (
@@ -179,13 +186,13 @@ export default function HomePage() {
           </motion.button>
 
           <button
-            onClick={() => setShowCustom((prev) => !prev)}
+            onClick={() => setShowCustomRaket((prev) => !prev)}
             className="text-sm underline text-blue-600"
           >
-            {showCustom ? "Sluit custom input" : "Voer custom aantal in"}
+            {showCustomRaket ? "Sluit custom input" : "Voer custom aantal in"}
           </button>
 
-          {showCustom && (
+          {showCustomRaket && (
             <div className="flex gap-2 mt-2">
               <input
                 type="number"
@@ -205,6 +212,33 @@ export default function HomePage() {
             </div>
           )}
 
+          <button
+            onClick={() => setShowCustomTraktaat((prev) => !prev)}
+            className="text-sm underline text-blue-600"
+          >
+            {showCustomTraktaat ? "Sluit traktaat input" : "Geef een traktaat"}
+          </button>
+
+          {showCustomTraktaat && (
+            <div className="flex gap-2 mt-2">
+              <input
+                type="number"
+                min="1"
+                value={customAmount}
+                onChange={(e) => setCustomAmount(Number(e.target.value))}
+                className="border px-3 py-2 rounded w-24 text-center"
+              />
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => logRaket(customAmount)}
+                className="bg-amber-500 text-white px-4 py-2 rounded"
+                disabled={loading}
+              >
+                Geef traktaat 🍻
+              </motion.button>
+            </div>
+          )}
+
             <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => logND(1)}
@@ -213,6 +247,7 @@ export default function HomePage() {
           >
             ND button 🏳️‍🌈
           </motion.button>
+
         </div>
       </div>
     </main>
