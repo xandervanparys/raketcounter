@@ -10,7 +10,7 @@ export default function LoginPage() {
       typeof window !== "undefined" &&
       window.location.origin.includes("localhost")
         ? "http://localhost:3000"
-        : "https://raketcounter.vercel.app";
+        : "https://raketcounter.be";
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
