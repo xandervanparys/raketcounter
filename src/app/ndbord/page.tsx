@@ -138,7 +138,7 @@ export default function LeaderboardPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
-            🏆 NDboard
+            🤡 NDboard
           </h1>
           <p className="text-muted-foreground">Grootste ND&#39;s</p>
         </div>
@@ -179,7 +179,7 @@ export default function LeaderboardPage() {
                   <Rocket className="w-3 h-3 mr-1" />
                   {leaderboard[0].total.toLocaleString()}
                 </Badge>
-                <p className="text-xs text-muted-foreground hidden md:block">👑 Grootste ND</p>
+                <p className="text-xs text-muted-foreground hidden md:block">🤡 Grootste ND</p>
               </CardContent>
             </Card>
 
