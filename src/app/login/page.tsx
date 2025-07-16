@@ -6,7 +6,16 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
 
   const loginWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' })
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: typeof window !== "undefined" 
+          ? `${window.location.origin}/`
+          : undefined,
+      },
+    });
+
+    if (error) alert(error.message);
   }
 
   const loginWithEmail = async () => {
