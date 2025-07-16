@@ -6,17 +6,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
 
   const loginWithGoogle = async () => {
+    const redirectTo =
+      typeof window !== "undefined" &&
+      window.location.origin.includes("localhost")
+        ? "http://localhost:3000"
+        : "https://raketcounter.vercel.app";
+
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: {
-        redirectTo: typeof window !== "undefined" 
-          ? `${window.location.origin}/`
-          : undefined,
+        redirectTo:
+          redirectTo
       },
     });
 
     if (error) alert(error.message);
-  }
+  };
 
   const loginWithEmail = async () => {
     const { error } = await supabase.auth.signInWithOtp({
