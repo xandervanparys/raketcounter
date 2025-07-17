@@ -18,7 +18,6 @@ export default function HomePage() {
   const [strepenCount, setStrepenCount] = useState<number>(0)
   const [strepenCountLoaded, setStrepenCountLoaded] = useState<boolean>(false)
   const [loading, setLoading] = useState(false)
-  const [buzzing, setBuzzing] = useState(false)
   const [buzzAmount, setBuzzAmount] = useState<string>("")
   const [showBuzzInput, setShowBuzzInput] = useState(false)
   const router = useRouter()
