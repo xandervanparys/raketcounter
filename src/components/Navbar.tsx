@@ -76,12 +76,6 @@ export default function Navbar() {
               >
                 ND&#39;s
               </Link>
-              <Link
-                href="/traktaatBord"
-                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Traktaten
-              </Link>
             </div>
           </div>
 
@@ -180,13 +174,6 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
               >
                 ND&#39;s
-              </Link>
-              <Link
-                href="/traktaatBord"
-                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
-                onClick={() => setMobileOpen(false)}
-              >
-                Traktaten
               </Link>
             </div>
           </div>
