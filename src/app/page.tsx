@@ -96,11 +96,6 @@ export default function HomePage() {
     }
   }
 
-  const logND = async () => {
-    logFrisdrank()
-    logStrepen(1)
-  }
-
   const logFrisdrank = async () => {
     if (!user || loading) return
     setLoading(true)
@@ -131,17 +126,6 @@ export default function HomePage() {
       console.error("Insert error:", error)
       alert("❌ Kon geen streep loggen.")
     }
-  }
-
-  const handleBuzz = () => {
-    setBuzzing(true)
-    if (navigator.vibrate) {
-      navigator.vibrate([200, 100, 200])
-    }
-    setTimeout(() => {
-      setBuzzing(false)
-      alert("🔔 Buzzed!")
-    }, 600)
   }
 
   const handleBuzzSubmit = async () => {
@@ -218,7 +202,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-4">
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={logND}
+              onClick={logFrisdrank}
               className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
               disabled={loading}
             >
