@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
-import type { User } from "@supabase/supabase-js"
-import Navbar from "@/components/Navbar"
-import { motion } from "framer-motion"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
+import Navbar from "@/components/Navbar";
+import { motion } from "framer-motion";
 import {
   Drawer,
   DrawerClose,
@@ -15,120 +15,131 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "@/components/ui/drawer";
+import { Minus, Plus } from "lucide-react";
 
 export default function HomePage() {
-  const [user, setUser] = useState<User | null>(null)
-  const [username, setUsername] = useState<string | null>(null)
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [raketCount, setRaketCount] = useState<number>(0)
-  const [raketCountLoaded, setRaketCountLoaded] = useState<boolean>(false)
-  const [frisdrankCount, setFrisdrankCount] = useState<number>(0)
-  const [frisdrankCountLoaded, setFrisdrankCountLoaded] = useState<boolean>(false)
-  const [strepenCount, setStrepenCount] = useState<number>(0)
-  const [strepenCountLoaded, setStrepenCountLoaded] = useState<boolean>(false)
-  const [loading, setLoading] = useState(false)
-  const [buzzing] = useState(false)
-  const [buzzAmount, setBuzzAmount] = useState<string>("")
-  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [raketCount, setRaketCount] = useState<number>(0);
+  const [raketCountLoaded, setRaketCountLoaded] = useState<boolean>(false);
+  const [frisdrankCount, setFrisdrankCount] = useState<number>(0);
+  const [frisdrankCountLoaded, setFrisdrankCountLoaded] =
+    useState<boolean>(false);
+  const [strepenCount, setStrepenCount] = useState<number>(0);
+  const [strepenCountLoaded, setStrepenCountLoaded] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  const [buzzing] = useState(false);
+  const [buzzAmount, setBuzzAmount] = useState<string>("1");
+  const router = useRouter();
 
   const fetchAndSetCount = async (
     table: string,
     setter: React.Dispatch<React.SetStateAction<number>>,
     loadedSetter: React.Dispatch<React.SetStateAction<boolean>>
   ) => {
-    if (!user) return
-    const { data, error } = await supabase.from(table).select("amount").eq("profile_id", user.id)
+    if (!user) return;
+    const { data, error } = await supabase
+      .from(table)
+      .select("amount")
+      .eq("profile_id", user.id);
     if (!error && data) {
-      const totalAmount = data.reduce((sum, log) => sum + log.amount, 0)
-      setter(totalAmount)
-      loadedSetter(true)
+      const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
+      setter(totalAmount);
+      loadedSetter(true);
     }
-  }
+  };
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) router.push("/login")
+      if (!data.user) router.push("/login");
       else {
-        setUser(data.user)
+        setUser(data.user);
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("username, avatar_url")
           .eq("id", data.user.id)
-          .single()
+          .single();
         if (!error && profile) {
-          setUsername(profile.username)
-          setAvatarUrl(profile.avatar_url)
+          setUsername(profile.username);
+          setAvatarUrl(profile.avatar_url);
         }
       }
-    })
-  }, [router])
+    });
+  }, [router]);
 
   useEffect(() => {
-    fetchAndSetCount("raket_logs", setRaketCount, setRaketCountLoaded)
-    fetchAndSetCount("frisdrank_logs", setFrisdrankCount, setFrisdrankCountLoaded)
-    fetchAndSetCount("strepen_logs", setStrepenCount, setStrepenCountLoaded)
-  }, [user])
+    fetchAndSetCount("raket_logs", setRaketCount, setRaketCountLoaded);
+    fetchAndSetCount(
+      "frisdrank_logs",
+      setFrisdrankCount,
+      setFrisdrankCountLoaded
+    );
+    fetchAndSetCount("strepen_logs", setStrepenCount, setStrepenCountLoaded);
+  }, [user]);
 
   const logRaket = async () => {
-    if (!user || loading) return
-    setLoading(true)
+    if (!user || loading) return;
+    setLoading(true);
     const { error } = await supabase.from("raket_logs").insert({
       profile_id: user.id,
       amount: 1,
-    })
-    setLoading(false)
+    });
+    setLoading(false);
     if (!error) {
-      setRaketCount((prev) => prev + 1)
+      setRaketCount((prev) => prev + 1);
     } else {
-      console.error("Insert error:", error)
-      alert("❌ Kon geen raket loggen.")
+      console.error("Insert error:", error);
+      alert("❌ Kon geen raket loggen.");
     }
-  }
+  };
 
   const logFrisdrank = async () => {
-    if (!user || loading) return
-    setLoading(true)
+    if (!user || loading) return;
+    setLoading(true);
     const { error } = await supabase.from("frisdrank_logs").insert({
       profile_id: user.id,
       amount: 1,
-    })
+    });
     if (!error) {
-      setFrisdrankCount((prev) => prev + 1)
+      setFrisdrankCount((prev) => prev + 1);
     } else {
-      console.error("Insert error:", error)
-      alert("❌ Kon geen ND drank loggen.")
+      console.error("Insert error:", error);
+      alert("❌ Kon geen ND drank loggen.");
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const logStrepen = async (amount: number) => {
-    if (!user || loading) return
-    setLoading(true)
+    if (!user || loading) return;
+    setLoading(true);
     const { error } = await supabase.from("strepen_logs").insert({
       profile_id: user.id,
       amount,
-    })
-    setLoading(false)
+    });
+    setLoading(false);
     if (!error) {
-      setStrepenCount((prev) => prev + amount)
+      setStrepenCount((prev) => prev + amount);
     } else {
-      console.error("Insert error:", error)
-      alert("❌ Kon geen streep loggen.")
+      console.error("Insert error:", error);
+      alert("❌ Kon geen streep loggen.");
     }
-  }
+  };
 
   const handleBuzzSubmit = async () => {
-    const amount = parseInt(buzzAmount)
+    const amount = parseInt(buzzAmount);
     if (isNaN(amount) || amount <= 0) {
-      alert("Voer een geldig positief getal in")
-      return
+      alert("Voer positieve raketten in e pipo");
+      return;
     }
-    await logStrepen(amount)
-    setBuzzAmount("")
-  }
+    await logStrepen(amount);
+    setBuzzAmount("1");
+    const closeButton = document.querySelector("[data-slot='drawer-close']") as HTMLButtonElement;
+    closeButton?.click();
+  };
 
-  if (!user) return null
+  if (!user) return null;
 
   return (
     <main className="p-8 text-center">
@@ -229,29 +240,61 @@ export default function HomePage() {
               <DrawerContent>
                 <DrawerHeader>
                   <DrawerTitle>Strepen loggen</DrawerTitle>
-                  <DrawerDescription>Geef het aantal strepen in dat je wil loggen.</DrawerDescription>
+                  <DrawerDescription>
+                    Geef het aantal strepen in dat je wil loggen.
+                  </DrawerDescription>
                 </DrawerHeader>
-                <div className="px-4 py-2 flex items-center justify-center space-x-2">
-                  <input
-                    type="number"
-                    min="1"
-                    value={buzzAmount}
-                    onChange={(e) => setBuzzAmount(e.target.value)}
-                    placeholder="Aantal"
-                    className="border border-gray-300 rounded px-3 py-2 w-32 text-center"
-                    disabled={loading}
-                  />
-                  <button
-                    onClick={handleBuzzSubmit}
-                    disabled={loading}
-                    className="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 font-semibold transition-colors disabled:opacity-50"
-                  >
-                    Log strepen
-                  </button>
+                <div className="px-4 py-2">
+                  <div className="flex items-center justify-center space-x-2">
+                    <button
+                      onClick={() =>
+                        setBuzzAmount((prev) => {
+                          const val = parseInt(prev || "0");
+                          return val > 1 ? String(val - 1) : "1";
+                        })
+                      }
+                      className="border border-gray-300 h-10 w-10 rounded-full flex items-center justify-center"
+                      disabled={loading}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      value={buzzAmount}
+                      onChange={(e) => setBuzzAmount(e.target.value)}
+                      placeholder="Aantal"
+                      className="border border-gray-300 rounded px-3 py-2 w-24 text-center"
+                      disabled={loading}
+                    />
+                    <button
+                      onClick={() =>
+                        setBuzzAmount((prev) => {
+                          const val = parseInt(prev || "0");
+                          return String(val + 1);
+                        })
+                      }
+                      className="border border-gray-300 h-10 w-10 rounded-full flex items-center justify-center"
+                      disabled={loading}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={handleBuzzSubmit}
+                      disabled={loading}
+                      className="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 font-semibold transition-colors disabled:opacity-50"
+                    >
+                      Log strepen
+                    </button>
+                  </div>
                 </div>
                 <DrawerFooter>
-                  <DrawerClose>
-                    <button className="text-gray-600 hover:text-gray-900 text-sm">Annuleren</button>
+                  <DrawerClose asChild>
+                    <button className="text-gray-600 hover:text-gray-900 text-sm">
+                      Annuleren
+                    </button>
                   </DrawerClose>
                 </DrawerFooter>
               </DrawerContent>
@@ -269,5 +312,5 @@ export default function HomePage() {
         </div>
       </div>
     </main>
-  )
+  );
 }
