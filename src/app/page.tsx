@@ -154,48 +154,127 @@ export default function HomePage() {
             className="w-32 h-32 rounded-lg object-cover mx-auto"
           />
         </div>
-        <p className="mb-4">
-          Raketten gelanceerd:{" "}
-          {raketCountLoaded ? (
-            <motion.div
-              key={raketCount}
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 0.5, times: [0, 0.5, 1] }}
-            >
-              <strong>{raketCount}</strong>
-            </motion.div>
-          ) : (
-            <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
-          )}
-        </p>
-        <p className="mb-4">
-          Strepen gezet:{" "}
-          {strepenCountLoaded ? (
-            <motion.div
-              key={strepenCount}
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 0.5, times: [0, 0.5, 1] }}
-            >
-              <strong>{strepenCount}</strong>
-            </motion.div>
-          ) : (
-            <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
-          )}
-        </p>
-        <p className="mb-4">
-          Aantal ND acties:{" "}
-          {frisdrankCountLoaded ? (
-            <motion.div
-              key={frisdrankCount}
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 0.5, times: [0, 0.5, 1] }}
-            >
-              <strong>{frisdrankCount}</strong>
-            </motion.div>
-          ) : (
-            <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
-          )}
-        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white shadow rounded-lg p-4 text-center">
+            <div className="text-4xl">🚀</div>
+            <div className="text-sm text-gray-500">Raketten gelanceerd</div>
+            {raketCountLoaded ? (
+              <motion.div
+                key={raketCount}
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+                className="text-xl font-bold"
+              >
+                {raketCount}
+              </motion.div>
+            ) : (
+              <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
+            )}
+          </div>
+          <div className="bg-white shadow rounded-lg p-4 text-center">
+            <div className="text-4xl">✏️</div>
+            <div className="text-sm text-gray-500">Strepen gezet</div>
+            {strepenCountLoaded ? (
+              <motion.div
+                key={strepenCount}
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+                className="text-xl font-bold"
+              >
+                {strepenCount}
+              </motion.div>
+            ) : (
+              <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
+            )}
+          </div>
+          <div className="bg-white shadow rounded-lg p-4 text-center">
+            <div className="text-4xl">🥤</div>
+            <div className="text-sm text-gray-500">Aantal ND acties</div>
+            {frisdrankCountLoaded ? (
+              <motion.div
+                key={frisdrankCount}
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+                className="text-xl font-bold"
+              >
+                {frisdrankCount}
+              </motion.div>
+            ) : (
+              <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
+            )}
+          </div>
+          <Drawer>
+            <DrawerTrigger asChild>
+              <button
+                className="bg-red-600 hover:bg-red-700 text-white rounded-full h-20 w-20 flex items-center justify-center shadow-lg font-bold text-sm transition-all duration-200 border-4 border-red-800 mx-auto my-auto"
+                disabled={buzzing}
+              >
+                BUZZ
+              </button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>Strepen loggen</DrawerTitle>
+                <DrawerDescription>
+                  Geef het aantal strepen in dat je wil loggen.
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className="px-4 py-2">
+                <div className="flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() =>
+                      setBuzzAmount((prev) => {
+                        const val = parseInt(prev || "0");
+                        return val > 1 ? String(val - 1) : "1";
+                      })
+                    }
+                    className="border border-gray-300 h-10 w-10 rounded-full flex items-center justify-center"
+                    disabled={loading}
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    value={buzzAmount}
+                    onChange={(e) => setBuzzAmount(e.target.value)}
+                    placeholder="Aantal"
+                    className="border border-gray-300 rounded px-3 py-2 w-24 text-center"
+                    disabled={loading}
+                  />
+                  <button
+                    onClick={() =>
+                      setBuzzAmount((prev) => {
+                        const val = parseInt(prev || "0");
+                        return String(val + 1);
+                      })
+                    }
+                    className="border border-gray-300 h-10 w-10 rounded-full flex items-center justify-center"
+                    disabled={loading}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={handleBuzzSubmit}
+                    disabled={loading}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 font-semibold transition-colors disabled:opacity-50"
+                  >
+                    Log strepen
+                  </button>
+                </div>
+              </div>
+              <DrawerFooter>
+                <DrawerClose asChild>
+                  <button className="text-gray-600 hover:text-gray-900 text-sm">
+                    Annuleren
+                  </button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+        </div>
 
         <div className="space-y-4 w-full max-w-md mx-auto">
           <div className="flex flex-col items-center space-y-4">
@@ -216,89 +295,6 @@ export default function HomePage() {
             >
               Streep zetten ✏️
             </motion.button>
-
-            <Drawer>
-              <DrawerTrigger asChild>
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  animate={
-                    buzzing
-                      ? {
-                          scale: [1, 1.1, 1],
-                          rotate: [0, -5, 5, -5, 0],
-                          backgroundColor: ["#dc2626", "#ef4444", "#dc2626"],
-                        }
-                      : {}
-                  }
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
-                  className="bg-red-600 hover:bg-red-700 text-white rounded-full h-20 w-20 flex items-center justify-center shadow-lg font-bold text-sm transition-all duration-200 border-4 border-red-800"
-                  disabled={buzzing}
-                >
-                  <span>BUZZ</span>
-                </motion.button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <DrawerHeader>
-                  <DrawerTitle>Strepen loggen</DrawerTitle>
-                  <DrawerDescription>
-                    Geef het aantal strepen in dat je wil loggen.
-                  </DrawerDescription>
-                </DrawerHeader>
-                <div className="px-4 py-2">
-                  <div className="flex items-center justify-center space-x-2">
-                    <button
-                      onClick={() =>
-                        setBuzzAmount((prev) => {
-                          const val = parseInt(prev || "0");
-                          return val > 1 ? String(val - 1) : "1";
-                        })
-                      }
-                      className="border border-gray-300 h-10 w-10 rounded-full flex items-center justify-center"
-                      disabled={loading}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      value={buzzAmount}
-                      onChange={(e) => setBuzzAmount(e.target.value)}
-                      placeholder="Aantal"
-                      className="border border-gray-300 rounded px-3 py-2 w-24 text-center"
-                      disabled={loading}
-                    />
-                    <button
-                      onClick={() =>
-                        setBuzzAmount((prev) => {
-                          const val = parseInt(prev || "0");
-                          return String(val + 1);
-                        })
-                      }
-                      className="border border-gray-300 h-10 w-10 rounded-full flex items-center justify-center"
-                      disabled={loading}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="mt-4 text-center">
-                    <button
-                      onClick={handleBuzzSubmit}
-                      disabled={loading}
-                      className="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 font-semibold transition-colors disabled:opacity-50"
-                    >
-                      Log strepen
-                    </button>
-                  </div>
-                </div>
-                <DrawerFooter>
-                  <DrawerClose asChild>
-                    <button className="text-gray-600 hover:text-gray-900 text-sm">
-                      Annuleren
-                    </button>
-                  </DrawerClose>
-                </DrawerFooter>
-              </DrawerContent>
-            </Drawer>
 
             <motion.button
               whileTap={{ scale: 0.9 }}
