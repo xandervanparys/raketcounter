@@ -31,14 +31,44 @@ export default function LeaderboardPage() {
     const fetchLeaderboard = async () => {
       setLoading(true);
 
-      const { data: logs, error: logsError } = await supabase
-        .from("raket_logs")
-        .select("profile_id, amount");
+      // Create a date in CEST (UTC+2)
+      const now = new Date();
+      const kampOffset = 60;
 
-      if (logsError) {
-        console.error("Error fetching raket_logs:", logsError);
-        setLoading(false);
-        return;
+      // Create new "today" object in CEST
+      const cestToday = new Date(now.getTime() + (now.getTimezoneOffset() + kampOffset) * 60_000);
+      cestToday.setHours(0, 0, 0, 0);
+
+      // Convert to ISO string for Supabase
+      const isoToday = cestToday.toISOString();
+
+      let logs;
+
+      if (filter === "today") {
+        const { data, error } = await supabase
+          .from("raket_logs")
+          .select("profile_id, amount, timestamp")
+          .gte("timestamp", isoToday);
+
+        if (error) {
+          console.error("Error fetching today's raket_logs:", error);
+          setLoading(false);
+          return;
+        }
+
+        logs = data;
+      } else {
+        const { data, error } = await supabase
+          .from("raket_logs")
+          .select("profile_id, amount, timestamp");
+
+        if (error) {
+          console.error("Error fetching all raket_logs:", error);
+          setLoading(false);
+          return;
+        }
+
+        logs = data;
       }
 
       const { data: profiles, error: profilesError } = await supabase
@@ -93,7 +123,7 @@ export default function LeaderboardPage() {
     };
 
     fetchLeaderboard();
-  }, []);
+  }, [filter]);
 
   const getRankIcon = (index: number) => {
     switch (index) {
