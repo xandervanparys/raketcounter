@@ -23,6 +23,20 @@ export default function HomePage() {
   const [showBuzzInput, setShowBuzzInput] = useState(false)
   const router = useRouter()
 
+  const fetchAndSetCount = async (
+    table: string,
+    setter: React.Dispatch<React.SetStateAction<number>>,
+    loadedSetter: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    if (!user) return
+    const { data, error } = await supabase.from(table).select("amount").eq("profile_id", user.id)
+    if (!error && data) {
+      const totalAmount = data.reduce((sum, log) => sum + log.amount, 0)
+      setter(totalAmount)
+      loadedSetter(true)
+    }
+  }
+
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) router.push("/login")
@@ -42,42 +56,9 @@ export default function HomePage() {
   }, [router])
 
   useEffect(() => {
-    const fetchCount = async () => {
-      if (!user) return
-      const { data, error } = await supabase.from("raket_logs").select("amount").eq("profile_id", user.id)
-      if (!error && data) {
-        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0)
-        setRaketCount(totalAmount)
-        setRaketCountLoaded(true)
-      }
-    }
-    fetchCount()
-  }, [user])
-
-  useEffect(() => {
-    const fetchCount = async () => {
-      if (!user) return
-      const { data, error } = await supabase.from("frisdrank_logs").select("amount").eq("profile_id", user.id)
-      if (!error && data) {
-        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0)
-        setFrisdrankCount(totalAmount)
-        setFrisdrankCountLoaded(true)
-      }
-    }
-    fetchCount()
-  }, [user])
-
-  useEffect(() => {
-    const fetchCount = async () => {
-      if (!user) return
-      const { data, error } = await supabase.from("strepen_logs").select("amount").eq("profile_id", user.id)
-      if (!error && data) {
-        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0)
-        setStrepenCount(totalAmount)
-        setStrepenCountLoaded(true)
-      }
-    }
-    fetchCount()
+    fetchAndSetCount("raket_logs", setRaketCount, setRaketCountLoaded)
+    fetchAndSetCount("frisdrank_logs", setFrisdrankCount, setFrisdrankCountLoaded)
+    fetchAndSetCount("strepen_logs", setStrepenCount, setStrepenCountLoaded)
   }, [user])
 
   const logRaket = async () => {
@@ -198,37 +179,25 @@ export default function HomePage() {
         </p>
 
         <div className="space-y-4 w-full max-w-md mx-auto">
-          {/* Switched buttons */}
-          <div className="grid grid-cols-2 gap-4">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={logFrisdrank}
-              className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
-              disabled={loading}
-            >
-              ND button 🏳️‍🌈
-            </motion.button>
+          <div className="flex flex-col items-center space-y-4">
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={logRaket}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-sm font-medium transition-colors whitespace-nowrap"
               disabled={loading}
             >
               Lanceer een raket 🚀
             </motion.button>
-          </div>
 
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => logStrepen(1)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg h-14 w-full font-medium transition-colors"
-            disabled={loading}
-          >
-            Streep zetten ✏️
-          </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => logStrepen(1)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-sm font-medium transition-colors whitespace-nowrap"
+              disabled={loading}
+            >
+              Streep zetten ✏️
+            </motion.button>
 
-          {/* BUZZ button and input */}
-          <div className="pt-4">
             <motion.button
               whileTap={{ scale: 0.9 }}
               animate={
@@ -242,20 +211,20 @@ export default function HomePage() {
               }
               transition={{ duration: 0.6, ease: "easeInOut" }}
               onClick={() => setShowBuzzInput((prev) => !prev)}
-              className="bg-red-600 hover:bg-red-700 text-white rounded-full h-20 w-20 flex items-center justify-center shadow-lg mx-auto font-bold text-sm transition-all duration-200 border-4 border-red-800"
+              className="bg-red-600 hover:bg-red-700 text-white rounded-full h-20 w-20 flex items-center justify-center shadow-lg font-bold text-sm transition-all duration-200 border-4 border-red-800"
               disabled={buzzing}
             >
               <span>BUZZ</span>
             </motion.button>
 
             {showBuzzInput && (
-              <div className="mt-4 flex items-center justify-center space-x-2">
+              <div className="mt-2 flex items-center justify-center space-x-2">
                 <input
                   type="number"
                   min="1"
                   value={buzzAmount}
                   onChange={(e) => setBuzzAmount(e.target.value)}
-                  placeholder="Aantal strepen"
+                  placeholder="Aantal"
                   className="border border-gray-300 rounded px-3 py-2 w-32 text-center"
                   disabled={loading}
                 />
@@ -268,6 +237,15 @@ export default function HomePage() {
                 </button>
               </div>
             )}
+
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={logFrisdrank}
+              className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-sm   font-medium transition-colors whitespace-nowrap"
+              disabled={loading}
+            >
+              ND button 🏳️‍🌈
+            </motion.button>
           </div>
         </div>
       </div>
