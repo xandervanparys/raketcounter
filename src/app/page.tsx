@@ -154,7 +154,7 @@ export default function HomePage() {
             className="w-32 h-32 rounded-lg object-cover mx-auto"
           />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <div className="bg-white shadow rounded-lg p-4 text-center">
             <div className="text-4xl">🚀</div>
             <div className="text-sm text-gray-500">Raketten gelanceerd</div>
