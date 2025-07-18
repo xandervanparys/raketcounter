@@ -25,7 +25,7 @@ type LeaderboardEntry = {
 export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "today">("all");
+  const [filter, setFilter] = useState<"Altijd" | "Vandaag">("Altijd");
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -44,7 +44,7 @@ export default function LeaderboardPage() {
 
       let logs;
 
-      if (filter === "today") {
+      if (filter === "Vandaag") {
         const { data, error } = await supabase
           .from("raket_logs")
           .select("profile_id, amount, timestamp")
@@ -197,15 +197,15 @@ export default function LeaderboardPage() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" className="text-xs h-8 px-3">
-                        {filter === "all" ? "All Time" : "Today"}
+                        {filter === "Altijd" ? "Altijd" : "Vandaag"}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => setFilter("all")}>
-                        All Time
+                      <DropdownMenuItem onSelect={() => setFilter("Altijd")}>
+                        Altijd
                       </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => setFilter("today")}>
-                        Today
+                      <DropdownMenuItem onSelect={() => setFilter("Vandaag")}>
+                        Vandaag
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
