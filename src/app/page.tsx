@@ -183,7 +183,7 @@ export default function HomePage() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={logRaket}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-sm font-medium transition-colors whitespace-nowrap"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
               disabled={loading}
             >
               Lanceer een raket 🚀
@@ -192,7 +192,7 @@ export default function HomePage() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => logStrepen(1)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-sm font-medium transition-colors whitespace-nowrap"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
               disabled={loading}
             >
               Streep zetten ✏️
@@ -241,7 +241,7 @@ export default function HomePage() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={logFrisdrank}
-              className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-sm   font-medium transition-colors whitespace-nowrap"
+              className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
               disabled={loading}
             >
               ND button 🏳️‍🌈
