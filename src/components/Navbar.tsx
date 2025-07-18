@@ -42,7 +42,7 @@ export default function Navbar() {
     await supabase.auth.signOut()
     setUserEmail(null)
     setOpen(false)
-    router.push("/")
+    router.push("/login")
   }
 
   return (
