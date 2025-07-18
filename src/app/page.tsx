@@ -6,6 +6,16 @@ import { supabase } from "@/lib/supabase"
 import type { User } from "@supabase/supabase-js"
 import Navbar from "@/components/Navbar"
 import { motion } from "framer-motion"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null)
@@ -20,7 +30,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [buzzing] = useState(false)
   const [buzzAmount, setBuzzAmount] = useState<string>("")
-  const [showBuzzInput, setShowBuzzInput] = useState(false)
   const router = useRouter()
 
   const fetchAndSetCount = async (
@@ -117,7 +126,6 @@ export default function HomePage() {
     }
     await logStrepen(amount)
     setBuzzAmount("")
-    setShowBuzzInput(false)
   }
 
   if (!user) return null
@@ -198,45 +206,56 @@ export default function HomePage() {
               Streep zetten ✏️
             </motion.button>
 
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              animate={
-                buzzing
-                  ? {
-                      scale: [1, 1.1, 1],
-                      rotate: [0, -5, 5, -5, 0],
-                      backgroundColor: ["#dc2626", "#ef4444", "#dc2626"],
-                    }
-                  : {}
-              }
-              transition={{ duration: 0.6, ease: "easeInOut" }}
-              onClick={() => setShowBuzzInput((prev) => !prev)}
-              className="bg-red-600 hover:bg-red-700 text-white rounded-full h-20 w-20 flex items-center justify-center shadow-lg font-bold text-sm transition-all duration-200 border-4 border-red-800"
-              disabled={buzzing}
-            >
-              <span>BUZZ</span>
-            </motion.button>
-
-            {showBuzzInput && (
-              <div className="mt-2 flex items-center justify-center space-x-2">
-                <input
-                  type="number"
-                  min="1"
-                  value={buzzAmount}
-                  onChange={(e) => setBuzzAmount(e.target.value)}
-                  placeholder="Aantal"
-                  className="border border-gray-300 rounded px-3 py-2 w-32 text-center"
-                  disabled={loading}
-                />
-                <button
-                  onClick={handleBuzzSubmit}
-                  disabled={loading}
-                  className="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 font-semibold transition-colors disabled:opacity-50"
+            <Drawer>
+              <DrawerTrigger asChild>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  animate={
+                    buzzing
+                      ? {
+                          scale: [1, 1.1, 1],
+                          rotate: [0, -5, 5, -5, 0],
+                          backgroundColor: ["#dc2626", "#ef4444", "#dc2626"],
+                        }
+                      : {}
+                  }
+                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                  className="bg-red-600 hover:bg-red-700 text-white rounded-full h-20 w-20 flex items-center justify-center shadow-lg font-bold text-sm transition-all duration-200 border-4 border-red-800"
+                  disabled={buzzing}
                 >
-                  Log strepen
-                </button>
-              </div>
-            )}
+                  <span>BUZZ</span>
+                </motion.button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>Strepen loggen</DrawerTitle>
+                  <DrawerDescription>Geef het aantal strepen in dat je wil loggen.</DrawerDescription>
+                </DrawerHeader>
+                <div className="px-4 py-2 flex items-center justify-center space-x-2">
+                  <input
+                    type="number"
+                    min="1"
+                    value={buzzAmount}
+                    onChange={(e) => setBuzzAmount(e.target.value)}
+                    placeholder="Aantal"
+                    className="border border-gray-300 rounded px-3 py-2 w-32 text-center"
+                    disabled={loading}
+                  />
+                  <button
+                    onClick={handleBuzzSubmit}
+                    disabled={loading}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 font-semibold transition-colors disabled:opacity-50"
+                  >
+                    Log strepen
+                  </button>
+                </div>
+                <DrawerFooter>
+                  <DrawerClose>
+                    <button className="text-gray-600 hover:text-gray-900 text-sm">Annuleren</button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
 
             <motion.button
               whileTap={{ scale: 0.9 }}
