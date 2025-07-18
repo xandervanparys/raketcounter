@@ -155,7 +155,7 @@ export default function HomePage() {
           />
         </div>
         <p className="mb-4">
-          Aantal raketten gelanceerd:{" "}
+          Raketten gelanceerd:{" "}
           {raketCountLoaded ? (
             <motion.div
               key={raketCount}
@@ -169,7 +169,7 @@ export default function HomePage() {
           )}
         </p>
         <p className="mb-4">
-          Aantal strepen gezet:{" "}
+          Strepen gezet:{" "}
           {strepenCountLoaded ? (
             <motion.div
               key={strepenCount}
@@ -183,7 +183,7 @@ export default function HomePage() {
           )}
         </p>
         <p className="mb-4">
-          Aantal ND dranken gedronken:{" "}
+          Aantal ND acties:{" "}
           {frisdrankCountLoaded ? (
             <motion.div
               key={frisdrankCount}
