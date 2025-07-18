@@ -147,7 +147,7 @@ export default function HomePage() {
     <main className="p-8 text-center">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter</h1>
+        <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter!</h1>
         <div className="hidden md:block">
           <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
           <div className="mb-4">
