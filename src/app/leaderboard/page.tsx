@@ -186,13 +186,12 @@ export default function LeaderboardPage() {
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-end mb-8">
-          <div className="text-left w-full flex items-center justify-between">
+          <div className="text-left w-full flex justify-center">
             <div className="flex flex-col">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-1">
                 🏆 Leaderboard
               </h1>
-
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-center mb-2">
                 <p className="text-muted-foreground">Top Astronauten</p>
                 <div className="ml-4">
                   <DropdownMenu>
