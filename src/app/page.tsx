@@ -150,20 +150,6 @@ export default function HomePage() {
           )}
         </p>
         <p className="mb-4">
-          Aantal ND dranken gedronken:{" "}
-          {frisdrankCountLoaded ? (
-            <motion.div
-              key={frisdrankCount}
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 0.5, times: [0, 0.5, 1] }}
-            >
-              <strong>{frisdrankCount}</strong>
-            </motion.div>
-          ) : (
-            <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
-          )}
-        </p>
-        <p className="mb-4">
           Aantal strepen gezet:{" "}
           {strepenCountLoaded ? (
             <motion.div
@@ -172,6 +158,20 @@ export default function HomePage() {
               transition={{ duration: 0.5, times: [0, 0.5, 1] }}
             >
               <strong>{strepenCount}</strong>
+            </motion.div>
+          ) : (
+            <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
+          )}
+        </p>
+        <p className="mb-4">
+          Aantal ND dranken gedronken:{" "}
+          {frisdrankCountLoaded ? (
+            <motion.div
+              key={frisdrankCount}
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+            >
+              <strong>{frisdrankCount}</strong>
             </motion.div>
           ) : (
             <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
