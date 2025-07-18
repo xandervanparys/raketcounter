@@ -6,6 +6,17 @@ import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
 import { motion } from "framer-motion";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Minus, Plus } from "lucide-react";
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -14,12 +25,31 @@ export default function HomePage() {
   const [raketCount, setRaketCount] = useState<number>(0);
   const [raketCountLoaded, setRaketCountLoaded] = useState<boolean>(false);
   const [frisdrankCount, setFrisdrankCount] = useState<number>(0);
-  const [frisdrankCountLoaded, setFrisdrankCountLoaded] = useState<boolean>(false);
-  const router = useRouter();
-  const [customAmount, setCustomAmount] = useState<number>(1);
+  const [frisdrankCountLoaded, setFrisdrankCountLoaded] =
+    useState<boolean>(false);
+  const [strepenCount, setStrepenCount] = useState<number>(0);
+  const [strepenCountLoaded, setStrepenCountLoaded] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
-  const [showCustomRaket, setShowCustomRaket] = useState(false);
-  const [showCustomTraktaat, setShowCustomTraktaat] = useState(false);
+  const [buzzing] = useState(false);
+  const [buzzAmount, setBuzzAmount] = useState<string>("1");
+  const router = useRouter();
+
+  const fetchAndSetCount = async (
+    table: string,
+    setter: React.Dispatch<React.SetStateAction<number>>,
+    loadedSetter: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from(table)
+      .select("amount")
+      .eq("profile_id", user.id);
+    if (!error && data) {
+      const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
+      setter(totalAmount);
+      loadedSetter(true);
+    }
+  };
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -40,99 +70,75 @@ export default function HomePage() {
   }, [router]);
 
   useEffect(() => {
-    const fetchCount = async () => {
-      if (!user) return;
-      const { data, error } = await supabase
-        .from("raket_logs")
-        .select("amount")
-        .eq("profile_id", user.id);
-
-      if (!error && data) {
-        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
-        setRaketCount(totalAmount);
-        setRaketCountLoaded(true);
-      }
-    };
-
-    fetchCount();
+    fetchAndSetCount("raket_logs", setRaketCount, setRaketCountLoaded);
+    fetchAndSetCount(
+      "frisdrank_logs",
+      setFrisdrankCount,
+      setFrisdrankCountLoaded
+    );
+    fetchAndSetCount("strepen_logs", setStrepenCount, setStrepenCountLoaded);
   }, [user]);
 
-  useEffect(() => {
-    const fetchCount = async () => {
-      if (!user) return;
-      const { data, error } = await supabase
-        .from("frisdrank_logs")
-        .select("amount")
-        .eq("profile_id", user.id);
-
-      if (!error && data) {
-        const totalAmount = data.reduce((sum, log) => sum + log.amount, 0);
-        setFrisdrankCount(totalAmount);
-        setFrisdrankCountLoaded(true);
-      }
-    };
-
-    fetchCount();
-  }, [user]);
-
-  const logRaket = async (amount: number) => {
+  const logRaket = async () => {
     if (!user || loading) return;
-    if (amount <= 0) {
-      alert("Geen negatieve pinten fucking ND.");
-      return;
-    }
-
     setLoading(true);
     const { error } = await supabase.from("raket_logs").insert({
       profile_id: user.id,
-      amount,
+      amount: 1,
     });
     setLoading(false);
-
     if (!error) {
-      setRaketCount((prev) => prev + amount);
-      setCustomAmount(1);
+      setRaketCount((prev) => prev + 1);
     } else {
       console.error("Insert error:", error);
       alert("❌ Kon geen raket loggen.");
     }
   };
 
-  const logND = async (amount: number) => {
-
+  const logFrisdrank = async () => {
     if (!user || loading) return;
-
     setLoading(true);
     const { error } = await supabase.from("frisdrank_logs").insert({
       profile_id: user.id,
-      amount, // You can adjust the amount here
+      amount: 1,
     });
-    setLoading(false);
-
     if (!error) {
-      setFrisdrankCount((prev) => prev + amount);
+      setFrisdrankCount((prev) => prev + 1);
     } else {
       console.error("Insert error:", error);
       alert("❌ Kon geen ND drank loggen.");
-    } 
+    }
+    setLoading(false);
   };
 
-  const logTraktaat = async (amount: number) => {
+  const logStrepen = async (amount: number) => {
     if (!user || loading) return;
-
     setLoading(true);
-    const { error } = await supabase.from("traktaat_logs").insert({
+    const { error } = await supabase.from("strepen_logs").insert({
       profile_id: user.id,
-      amount, // You can adjust the amount here
+      amount,
     });
     setLoading(false);
-
     if (!error) {
-      setFrisdrankCount((prev) => prev + amount);
+      setStrepenCount((prev) => prev + amount);
     } else {
       console.error("Insert error:", error);
-      alert("❌ Kon geen traktaat loggen.");
-    } 
+      alert("❌ Kon geen streep loggen.");
+    }
+  };
+
+  const handleBuzzSubmit = async () => {
+    const amount = parseInt(buzzAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert("Voer positieve raketten in e pipo");
+      return;
+    }
+    await logStrepen(amount);
+    setBuzzAmount("1");
+    const closeButton = document.querySelector(
+      "[data-slot='drawer-close']"
+    ) as HTMLButtonElement;
+    closeButton?.click();
   };
 
   if (!user) return null;
@@ -142,124 +148,167 @@ export default function HomePage() {
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter</h1>
-        <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
-        <div className="mb-4">
-          <img
-            src={avatarUrl ?? "/ND_default.png"}
-            alt="Avatar"
-            className="w-32 h-32 rounded-lg object-cover mx-auto"
-          />
+        <div className="hidden md:block">
+          <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
+          <div className="mb-4">
+            <img
+              src={avatarUrl ?? "/ND_default.png"}
+              alt="Avatar"
+              className="w-32 h-32 rounded-lg object-cover mx-auto"
+            />
+          </div>
         </div>
-        <p className="mb-4">
-          Aantal raketten gelanceerd:{" "}
-          {raketCountLoaded ? (
-            <motion.div
-              key={raketCount}
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 0.5, times: [0, 0.5, 1] }}
-            >
-              <strong>{raketCount}</strong>
-            </motion.div>
-          ) : (
-            <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
-          )}
-        </p>
-        <p className="mb-4">
-          Aantal ND dranken gedronken:{" "}
-          {frisdrankCountLoaded ? (
-            <motion.div
-              key={frisdrankCount}
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 0.5, times: [0, 0.5, 1] }}
-            >
-              <strong>{frisdrankCount}</strong>
-            </motion.div>
-          ) : (
-            <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
-          )}
-        </p>
-        <div className="flex flex-col items-center gap-4">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => logRaket(1)}
-            className="bg-green-600 text-white px-4 py-2 rounded"
-            disabled={loading}
-          >
-            Lanceer een raket 🚀
-          </motion.button>
-
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => logRaket(24)}
-            className="bg-green-600 text-white px-4 py-2 rounded"
-            disabled={loading}
-          >
-            Zet een Bak 🛸
-          </motion.button>
-
-          <button
-            onClick={() => setShowCustomRaket((prev) => !prev)}
-            className="text-sm underline text-blue-600"
-          >
-            {showCustomRaket ? "Sluit custom input" : "Voer custom aantal in"}
-          </button>
-
-          {showCustomRaket && (
-            <div className="flex gap-2 mt-2">
-              <input
-                type="number"
-                min="1"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(Number(e.target.value))}
-                className="border px-3 py-2 rounded w-24 text-center"
-              />
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => logRaket(customAmount)}
-                className="bg-green-600 text-white px-4 py-2 rounded"
-                disabled={loading}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white shadow rounded-lg p-4 text-center">
+            <div className="text-4xl">🚀</div>
+            <div className="text-sm text-gray-500">Raketten gelanceerd</div>
+            {raketCountLoaded ? (
+              <motion.div
+                key={raketCount}
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+                className="text-xl font-bold"
               >
-                Log custom amount
-              </motion.button>
-            </div>
-          )}
-
-          <button
-            onClick={() => setShowCustomTraktaat((prev) => !prev)}
-            className="text-sm underline text-blue-600"
-          >
-            {showCustomTraktaat ? "Sluit traktaat input" : "Geef een traktaat"}
-          </button>
-
-          {showCustomTraktaat && (
-            <div className="flex gap-2 mt-2">
-              <input
-                type="number"
-                min="1"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(Number(e.target.value))}
-                className="border px-3 py-2 rounded w-24 text-center"
-              />
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => logTraktaat(customAmount)}
-                className="bg-amber-500 text-white px-4 py-2 rounded"
-                disabled={loading}
+                {raketCount}
+              </motion.div>
+            ) : (
+              <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
+            )}
+          </div>
+          <div className="bg-white shadow rounded-lg p-4 text-center">
+            <div className="text-4xl">✏️</div>
+            <div className="text-sm text-gray-500">Strepen gezet</div>
+            {strepenCountLoaded ? (
+              <motion.div
+                key={strepenCount}
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+                className="text-xl font-bold"
               >
-                Geef traktaat 🍻
-              </motion.button>
-            </div>
-          )}
+                {strepenCount}
+              </motion.div>
+            ) : (
+              <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
+            )}
+          </div>
+          <div className="bg-white shadow rounded-lg p-4 text-center">
+            <div className="text-4xl">🥤</div>
+            <div className="text-sm text-gray-500">Aantal ND acties</div>
+            {frisdrankCountLoaded ? (
+              <motion.div
+                key={frisdrankCount}
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.5, times: [0, 0.5, 1] }}
+                className="text-xl font-bold"
+              >
+                {frisdrankCount}
+              </motion.div>
+            ) : (
+              <div className="w-8 h-6 mx-auto bg-gray-300 rounded animate-pulse" />
+            )}
+          </div>
+          <Drawer>
+            <DrawerTrigger asChild>
+              <button
+                className="bg-red-600 hover:bg-red-700 text-white rounded-full h-20 w-20 flex items-center justify-center shadow-lg font-bold text-sm transition-all duration-200 border-4 border-red-800 mx-auto my-auto"
+                disabled={buzzing}
+              >
+                BUZZ
+              </button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>Strepen loggen</DrawerTitle>
+                <DrawerDescription>
+                  Geef het aantal strepen in dat je wil loggen.
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className="px-4 py-2">
+                <div className="flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() =>
+                      setBuzzAmount((prev) => {
+                        const val = parseInt(prev || "0");
+                        return val > 1 ? String(val - 1) : "1";
+                      })
+                    }
+                    className="border border-gray-300 h-10 w-10 rounded-full flex items-center justify-center"
+                    disabled={loading}
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    value={buzzAmount}
+                    onChange={(e) => setBuzzAmount(e.target.value)}
+                    placeholder="Aantal"
+                    className="border border-gray-300 rounded px-3 py-2 w-24 text-center"
+                    disabled={loading}
+                  />
+                  <button
+                    onClick={() =>
+                      setBuzzAmount((prev) => {
+                        const val = parseInt(prev || "0");
+                        return String(val + 1);
+                      })
+                    }
+                    className="border border-gray-300 h-10 w-10 rounded-full flex items-center justify-center"
+                    disabled={loading}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={handleBuzzSubmit}
+                    disabled={loading}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 font-semibold transition-colors disabled:opacity-50"
+                  >
+                    Log strepen
+                  </button>
+                </div>
+              </div>
+              <DrawerFooter>
+                <DrawerClose asChild>
+                  <button className="text-gray-600 hover:text-gray-900 text-sm">
+                    Annuleren
+                  </button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+        </div>
+
+        <div className="space-y-4 w-full max-w-md mx-auto">
+          <div className="flex flex-col items-center space-y-4">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={logRaket}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
+              disabled={loading}
+            >
+              Lanceer een raket 🚀
+            </motion.button>
 
             <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => logND(1)}
-            className="bg-pink-600 text-white px-4 py-2 rounded"
-            disabled={loading}
-          >
-            ND button 🏳️‍🌈
-          </motion.button>
+              whileTap={{ scale: 0.9 }}
+              onClick={() => logStrepen(1)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
+              disabled={loading}
+            >
+              Streep zetten ✏️
+            </motion.button>
 
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={logFrisdrank}
+              className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
+              disabled={loading}
+            >
+              ND button 🏳️‍🌈
+            </motion.button>
+          </div>
         </div>
       </div>
     </main>
