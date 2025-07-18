@@ -146,14 +146,14 @@ export default function HomePage() {
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-4">Welkom bij de Raketcounter</h1>
-        <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
+        {/* <p className="mb-2">Ingelogd als: {username ?? user.email}</p>
         <div className="mb-4">
           <img
             src={avatarUrl ?? "/ND_default.png"}
             alt="Avatar"
             className="w-32 h-32 rounded-lg object-cover mx-auto"
           />
-        </div>
+        </div> */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <div className="bg-white shadow rounded-lg p-4 text-center">
             <div className="text-4xl">🚀</div>

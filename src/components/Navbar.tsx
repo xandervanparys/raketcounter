@@ -11,6 +11,7 @@ export default function Navbar() {
   const [authChecked, setAuthChecked] = useState(false)
   const [open, setOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -18,6 +19,7 @@ export default function Navbar() {
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user) {
         setUserEmail(data?.user?.email ?? null)
+        setAvatarUrl(data?.user?.user_metadata?.avatar_url ?? '/ND_default.png')
       }
       setAuthChecked(true)
     })
@@ -97,14 +99,19 @@ export default function Navbar() {
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-lg"
                     title={userEmail}
                   >
-                    <span className="text-white font-semibold text-sm">{userEmail[0].toUpperCase()}</span>
+                    <img
+                      src={avatarUrl ?? '/ND_default.png'}
+                      alt="User Avatar"
+                      className="h-full w-full object-cover rounded-full"
+                    />
                   </button>
 
                   {open && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 py-1">
+                    <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 py-1">
                       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                         <p className="text-sm text-gray-500 dark:text-gray-400">Signed in as</p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{userEmail}</p>
+                        
                       </div>
 
                       <button
