@@ -16,10 +16,25 @@ export default function Navbar() {
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (data?.user) {
-        setUserEmail(data?.user?.email ?? null)
-        setAvatarUrl(data?.user?.user_metadata?.avatar_url ?? '/ND_default.png')
+        const uid = data.user.id
+        setUserEmail(data.user.email ?? null)
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', uid)
+          .single()
+
+        if (!error && profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url)
+        } else {
+          // Fallback to auth metadata (e.g., first Google login) or default
+          type Meta = { avatar_url?: string }
+          const meta = data.user.user_metadata as Meta | null | undefined
+          const metaUrl = meta?.avatar_url
+          setAvatarUrl(metaUrl ?? '/ND_default.png')
+        }
       }
       setAuthChecked(true)
     })

@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [imgLoading, setImgLoading] = useState(false)
   
 
   useEffect(() => {
@@ -35,14 +36,16 @@ export default function SettingsPage() {
     if (!avatarFile) return null
     const { error: uploadError } = await supabase.storage
       .from('avatars')
-      .upload(`public/${userId}`, avatarFile, { upsert: true })
+      .upload(`public/${userId}`, avatarFile, { upsert: true, contentType: avatarFile.type })
 
     if (uploadError) {
       console.error('Avatar upload error:', uploadError)
       return null
     }
 
-    return supabase.storage.from('avatars').getPublicUrl(`public/${userId}`).data.publicUrl
+    const result = supabase.storage.from('avatars').getPublicUrl(`public/${userId}`)
+    const cacheBustedUrl = `${result.data.publicUrl}?t=${Date.now()}`
+    return cacheBustedUrl
   }
 
   const updateProfile = async () => {
@@ -54,9 +57,13 @@ export default function SettingsPage() {
       return
     }
 
-    const avatarUrl = await uploadAvatar(user.id)
+    const newAvatarUrl = await uploadAvatar(user.id)
     const updates: { username: string, avatar_url?: string } = { username: displayName }
-    if (avatarUrl) updates.avatar_url = avatarUrl
+    if (newAvatarUrl) {
+      updates.avatar_url = newAvatarUrl
+      setImgLoading(true)
+      setAvatarUrl(newAvatarUrl)
+    }
 
     const { error } = await supabase
       .from('profiles')
@@ -89,18 +96,28 @@ export default function SettingsPage() {
       <label className="block mb-2 font-semibold" htmlFor="avatar">
         Avatar Image
       </label>
-      {avatarUrl && (
-        <img
-          src={avatarUrl}
-          alt="Current avatar"
-          className="w-24 h-24 object-cover rounded-lg mb-4"
-        />
-      )}
+      <div className="w-24 h-24 mb-4 relative">
+        {(!avatarUrl || imgLoading) && (
+          <div className="w-24 h-24 rounded-lg bg-gray-300 dark:bg-gray-700 animate-pulse absolute inset-0" />
+        )}
+        {avatarUrl && (
+          <img
+            src={avatarUrl}
+            alt="Current avatar"
+            className="w-24 h-24 object-cover rounded-lg"
+            onLoad={() => setImgLoading(false)}
+          />
+        )}
+      </div>
       <input
         id="avatar"
         type="file"
         accept="image/*"
-        onChange={e => setAvatarFile(e.target.files?.[0] ?? null)}
+        onChange={e => {
+          const f = e.target.files?.[0] ?? null
+          setAvatarFile(f)
+          if (f) setImgLoading(true)
+        }}
         className="w-full border rounded px-3 py-2 mb-4"
       />
 
