@@ -30,7 +30,9 @@ export default function Navbar() {
           setAvatarUrl(profile.avatar_url)
         } else {
           // Fallback to auth metadata (e.g., first Google login) or default
-          const metaUrl = (data.user as any)?.user_metadata?.avatar_url as string | undefined
+          type Meta = { avatar_url?: string }
+          const meta = data.user.user_metadata as Meta | null | undefined
+          const metaUrl = meta?.avatar_url
           setAvatarUrl(metaUrl ?? '/ND_default.png')
         }
       }
