@@ -17,7 +17,6 @@ export default function KasDashboard() {
   const [selectedActions, setSelectedActions] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
 
-  // access gate: only KAS may view this page
   useEffect(() => {
     void (async () => {
       const { data: authData } = await supabase.auth.getUser()
@@ -35,11 +34,9 @@ export default function KasDashboard() {
     })()
   }, [router])
 
-  // load users
   useEffect(() => {
     if (!isKas) return;
     void (async () => {
-      // profiles (public readable per your policy)
       const { data: profiles, error: pErr } = await supabase
         .from('profiles')
         .select('id, username, full_name')
@@ -65,7 +62,6 @@ export default function KasDashboard() {
 
   const displayName = (u: Profile) => (u.username && u.username.trim() !== '' ? u.username : u.full_name) ?? u.id.slice(0,8)
 
-  // toggle kas
   const toggleKas = async (userId: string, makeKas: boolean) => {
     setLoading(true)
     try {
@@ -90,7 +86,6 @@ export default function KasDashboard() {
     }
   }
 
-  // fetch recent actions
   const loadRecent = async (userId: string) => {
     setSelectedUser(userId)
     setSelectedActions(new Set())
@@ -102,7 +97,6 @@ export default function KasDashboard() {
     setRecent(data ?? [])
   }
 
-  // undo selected actions
   const undoSelected = async () => {
     if (!selectedActions.size) return
     setLoading(true)
@@ -115,7 +109,6 @@ export default function KasDashboard() {
         })
         if (error) throw error
       }
-      // refresh recent
       if (selectedUser) await loadRecent(selectedUser)
     } catch (e) {
       console.error(e)
@@ -169,7 +162,11 @@ export default function KasDashboard() {
                   {displayName(u)}
                 </button>
                 <button
-                  onClick={() => toggleKas(u.id, !kasIds.has(u.id))}
+                  onClick={() => {
+                    if(kasIds.has(u.id) ? confirm(`Wil je ${displayName(u)} verwijderen als kas?`) : confirm(`Wil je ${displayName(u)} kas maken?`)){
+                        toggleKas(u.id, !kasIds.has(u.id))
+                    }
+                  }}
                   className={`px-3 py-1 rounded text-sm ${kasIds.has(u.id) ? 'bg-yellow-500 text-black' : 'bg-gray-200 text-gray-900'}`}
                   disabled={loading}
                   title={kasIds.has(u.id) ? 'Kas intrekken' : 'Kas toekennen'}
