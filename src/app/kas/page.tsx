@@ -1,11 +1,15 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 type Profile = { id: string; username: string | null; full_name: string | null; email?: string | null }
 type ActionRow = { entry_id: string; table_name: 'raket_logs'|'strepen_logs'|'frisdrank_logs'; kind: string; amount: number; ts: string }
 
 export default function KasDashboard() {
+  const router = useRouter()
+  const [kasChecked, setKasChecked] = useState(false)
+  const [isKas, setIsKas] = useState(false)
   const [users, setUsers] = useState<Profile[]>([])
   const [kasIds, setKasIds] = useState<Set<string>>(new Set())
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
@@ -13,8 +17,27 @@ export default function KasDashboard() {
   const [selectedActions, setSelectedActions] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
 
+  // access gate: only KAS may view this page
+  useEffect(() => {
+    void (async () => {
+      const { data: authData } = await supabase.auth.getUser()
+      if (!authData?.user) {
+        router.replace('/login')
+        return
+      }
+      const { data: kasRes, error: kasErr } = await supabase.rpc('is_kas')
+      if (kasErr || !kasRes) {
+        router.replace('/404')
+        return
+      }
+      setIsKas(true)
+      setKasChecked(true)
+    })()
+  }, [router])
+
   // load users
   useEffect(() => {
+    if (!isKas) return;
     void (async () => {
       // profiles (public readable per your policy)
       const { data: profiles, error: pErr } = await supabase
@@ -38,7 +61,7 @@ export default function KasDashboard() {
       if (rErr) return
       setKasIds(new Set((roles ?? []).filter(r => r.role === 'kas').map(r => r.user_id)))
     })()
-  }, [])
+  }, [isKas])
 
   const displayName = (u: Profile) => (u.username && u.username.trim() !== '' ? u.username : u.full_name) ?? u.id.slice(0,8)
 
@@ -118,6 +141,7 @@ export default function KasDashboard() {
     }
   }
 
+  if (!kasChecked) return null
   return (
     <main className="p-6 space-y-6">
       <div className="flex items-center justify-between">
