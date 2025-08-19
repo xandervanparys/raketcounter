@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { House } from "lucide-react";
-import RekeningOverview from "@/components/RekeningOverview";
+import RekeningOverview, { exportRekeningXlsx } from "@/components/RekeningOverview";
 import type { RekeningRow } from "@/types";
 
 function useRekeningAllTime() {
@@ -52,6 +52,8 @@ export default function KasDashboard() {
     new Set()
   );
   const [loading, setLoading] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -166,21 +168,8 @@ export default function KasDashboard() {
     }
   };
 
-  const resetAll = async () => {
-    if (!confirm("Alles resetten (raket, strepen, frisdrank)?")) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.rpc("reset_all_logs");
-      if (error) throw error;
-      alert(`Reset OK: ${JSON.stringify(data)}`);
-      if (selectedUser) await loadRecent(selectedUser);
-      await refetchRekening();
-    } catch (e) {
-      console.error(e);
-      alert("Reset mislukt.");
-    } finally {
-      setLoading(false);
-    }
+  const resetAll = () => {
+    setShowResetConfirm(true);
   };
 
   if (!kasChecked) return null;
@@ -208,6 +197,62 @@ export default function KasDashboard() {
           Database resetten
         </button>
       </div>
+
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowResetConfirm(false)} />
+          <div className="relative z-10 w-full max-w-md rounded-lg border bg-white p-5 shadow-lg dark:bg-gray-900 dark:border-gray-800">
+            <h3 className="text-lg font-semibold mb-2">Database resetten</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              Je staat op het punt om <strong>alle logs</strong> (raket, strepen, frisdrank) te verwijderen.
+              Wil je eerst de huidige rekening als Excel downloaden?
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-end">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="px-4 py-2 rounded border border-gray-300 text-gray-800 dark:text-gray-200 dark:border-gray-700"
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    setIsDownloading(true);
+                    await exportRekeningXlsx(rekeningRows);
+                  } finally {
+                    setIsDownloading(false);
+                  }
+                }}
+                disabled={isDownloading}
+                className="px-4 py-2 rounded bg-emerald-600 text-white disabled:opacity-50"
+              >
+                {isDownloading ? "Downloaden..." : "Download Excel"}
+              </button>
+              <button
+                onClick={async () => {
+                  setShowResetConfirm(false);
+                  setLoading(true);
+                  try {
+                    const { data, error } = await supabase.rpc("reset_all_logs");
+                    if (error) throw error;
+                    alert(`Reset OK: ${JSON.stringify(data)}`);
+                    if (selectedUser) await loadRecent(selectedUser);
+                    await refetchRekening();
+                  } catch (e) {
+                    console.error(e);
+                    alert("Reset mislukt.");
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                className="px-4 py-2 rounded bg-red-600 text-white"
+              >
+                Reset zonder download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Users */}
