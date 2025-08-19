@@ -19,7 +19,6 @@ export async function exportRekeningXlsx(
   if (!rows.length) return;
   const { headers, data } = formatRekeningForExport(rows);
   const XLSX = await import("xlsx");
-  // Build worksheet from an array of arrays to control headers & order
   const aoa = [headers, ...data];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const wb = XLSX.utils.book_new();
