@@ -3,6 +3,28 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { House } from "lucide-react";
+import RekeningOverview, { exportRekeningXlsx } from "@/components/RekeningOverview";
+import type { RekeningRow } from "@/types";
+
+function useRekeningAllTime() {
+  const [rows, setRows] = useState<RekeningRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refetch = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.rpc('rekening_alltime');
+    if (!error && data) {
+      setRows(data as RekeningRow[]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    void refetch();
+  }, []);
+
+  return { rows, loading, refetch };
+}
 
 type Profile = {
   id: string;
@@ -30,6 +52,8 @@ export default function KasDashboard() {
     new Set()
   );
   const [loading, setLoading] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -77,6 +101,8 @@ export default function KasDashboard() {
       );
     })();
   }, [isKas]);
+
+  const { rows: rekeningRows, loading: rekeningLoading, refetch: refetchRekening } = useRekeningAllTime();
 
   const displayName = (u: Profile) =>
     (u.username && u.username.trim() !== "" ? u.username : u.full_name) ??
@@ -133,6 +159,7 @@ export default function KasDashboard() {
         if (error) throw error;
       }
       if (selectedUser) await loadRecent(selectedUser);
+      await refetchRekening();
     } catch (e) {
       console.error(e);
       alert("Ongedaan maken mislukt.");
@@ -141,20 +168,8 @@ export default function KasDashboard() {
     }
   };
 
-  const resetAll = async () => {
-    if (!confirm("Alles resetten (raket, strepen, frisdrank)?")) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.rpc("reset_all_logs");
-      if (error) throw error;
-      alert(`Reset OK: ${JSON.stringify(data)}`);
-      if (selectedUser) await loadRecent(selectedUser);
-    } catch (e) {
-      console.error(e);
-      alert("Reset mislukt.");
-    } finally {
-      setLoading(false);
-    }
+  const resetAll = () => {
+    setShowResetConfirm(true);
   };
 
   if (!kasChecked) return null;
@@ -182,6 +197,62 @@ export default function KasDashboard() {
           Database resetten
         </button>
       </div>
+
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowResetConfirm(false)} />
+          <div className="relative z-10 w-full max-w-md rounded-lg border bg-white p-5 shadow-lg dark:bg-gray-900 dark:border-gray-800">
+            <h3 className="text-lg font-semibold mb-2">Database resetten</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              Je staat op het punt om <strong>alle logs</strong> (raket, strepen, frisdrank) te verwijderen.
+              Wil je eerst de huidige rekening als Excel downloaden?
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-end">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="px-4 py-2 rounded border border-gray-300 text-gray-800 dark:text-gray-200 dark:border-gray-700"
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    setIsDownloading(true);
+                    await exportRekeningXlsx(rekeningRows);
+                  } finally {
+                    setIsDownloading(false);
+                  }
+                }}
+                disabled={isDownloading}
+                className="px-4 py-2 rounded bg-emerald-600 text-white disabled:opacity-50"
+              >
+                {isDownloading ? "Downloaden..." : "Download Excel"}
+              </button>
+              <button
+                onClick={async () => {
+                  setShowResetConfirm(false);
+                  setLoading(true);
+                  try {
+                    const { data, error } = await supabase.rpc("reset_all_logs");
+                    if (error) throw error;
+                    alert(`Reset OK: ${JSON.stringify(data)}`);
+                    if (selectedUser) await loadRecent(selectedUser);
+                    await refetchRekening();
+                  } catch (e) {
+                    console.error(e);
+                    alert("Reset mislukt.");
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                className="px-4 py-2 rounded bg-red-600 text-white"
+              >
+                Reset zonder download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Users */}
@@ -286,143 +357,7 @@ export default function KasDashboard() {
       </div>
 
       {/* Rekening all-time */}
-      <AllTimeTable />
+      <RekeningOverview rows={rekeningRows} loading={rekeningLoading} />
     </main>
-  );
-}
-
-function AllTimeTable() {
-  const [rows, setRows] = useState<
-    {
-      profile_id: string;
-      display_name: string | null;
-      raket_total: number;
-      fris_total: number;
-      streep_total: number;
-    }[]
-  >([]);
-  useEffect(() => {
-    void (async () => {
-      const { data, error } = await supabase.rpc("rekening_alltime");
-      if (!error) setRows(data ?? []);
-    })();
-  }, []);
-
-  // CSV helpers
-  const csvEscape = (val: unknown) => {
-    const s = String(val ?? "");
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  };
-
-  const downloadCsv = () => {
-    if (!rows.length) return;
-    const headers = [
-      "profile_id",
-      "display_name",
-      "raket_total",
-      "fris_total",
-      "streep_total",
-    ];
-    const body = rows.map((r) =>
-      [
-        r.profile_id,
-        r.display_name ?? "",
-        r.raket_total,
-        r.fris_total,
-        r.streep_total,
-      ]
-        .map(csvEscape)
-        .join(",")
-    );
-    const csv = [headers.join(","), ...body].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `rekening_alltime_${new Date()
-      .toISOString()
-      .slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadXlsx = async () => {
-    if (!rows.length) return;
-    try {
-      const XLSX = await import("xlsx");
-      // Build a flat array of objects for the sheet
-      const data = rows.map((r) => ({
-        display_name: r.display_name ?? r.profile_id.slice(0, 8),
-        raket_total: r.raket_total,
-        fris_total: r.fris_total,
-        streep_total: r.streep_total,
-      }));
-      const ws = XLSX.utils.json_to_sheet(data, {
-        header: ["display_name", "raket_total", "fris_total", "streep_total"],
-      });
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Rekening");
-      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      const blob = new Blob([wbout], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `rekening_alltime_${new Date()
-        .toISOString()
-        .slice(0, 10)}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Excel export failed, falling back to CSV", err);
-      downloadCsv();
-    }
-  };
-
-  return (
-    <section className="border rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold">Rekening (all-time)</h2>
-        <button
-          onClick={downloadXlsx}
-          disabled={!rows.length}
-          className="px-3 py-1.5 rounded text-sm bg-emerald-600 text-white disabled:opacity-50 hover:bg-emerald-700"
-          title={rows.length ? "Download Excel" : "Geen data"}
-        >
-          Download Excel
-        </button>
-      </div>
-      <div className="overflow-auto">
-        <table className="min-w-[640px] w-full text-sm">
-          <thead className="text-left border-b">
-            <tr>
-              <th className="py-2 pr-3">Naam</th>
-              <th className="py-2 pr-3">Raketten</th>
-              <th className="py-2 pr-3">ND’s</th>
-              <th className="py-2">Strepen</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.profile_id} className="border-b last:border-0">
-                <td className="py-2 pr-3">
-                  {r.display_name ?? r.profile_id.slice(0, 8)}
-                </td>
-                <td className="py-2 pr-3">{r.raket_total}</td>
-                <td className="py-2 pr-3">{r.fris_total}</td>
-                <td className="py-2">{r.streep_total}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
   );
 }
