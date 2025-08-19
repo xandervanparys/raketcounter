@@ -4,6 +4,34 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { House } from "lucide-react";
 
+type RekeningRow = {
+  profile_id: string;
+  display_name: string | null;
+  raket_total: number;
+  fris_total: number;
+  streep_total: number;
+};
+
+function useRekeningAllTime() {
+  const [rows, setRows] = useState<RekeningRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refetch = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.rpc('rekening_alltime');
+    if (!error && data) {
+      setRows(data as RekeningRow[]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    void refetch();
+  }, []);
+
+  return { rows, loading, refetch };
+}
+
 type Profile = {
   id: string;
   username: string | null;
@@ -78,6 +106,8 @@ export default function KasDashboard() {
     })();
   }, [isKas]);
 
+  const { rows: rekeningRows, loading: rekeningLoading, refetch: refetchRekening } = useRekeningAllTime();
+
   const displayName = (u: Profile) =>
     (u.username && u.username.trim() !== "" ? u.username : u.full_name) ??
     u.id.slice(0, 8);
@@ -133,6 +163,7 @@ export default function KasDashboard() {
         if (error) throw error;
       }
       if (selectedUser) await loadRecent(selectedUser);
+      await refetchRekening();
     } catch (e) {
       console.error(e);
       alert("Ongedaan maken mislukt.");
@@ -149,6 +180,7 @@ export default function KasDashboard() {
       if (error) throw error;
       alert(`Reset OK: ${JSON.stringify(data)}`);
       if (selectedUser) await loadRecent(selectedUser);
+      await refetchRekening();
     } catch (e) {
       console.error(e);
       alert("Reset mislukt.");
@@ -286,28 +318,12 @@ export default function KasDashboard() {
       </div>
 
       {/* Rekening all-time */}
-      <AllTimeTable />
+      <AllTimeTable rows={rekeningRows} loading={rekeningLoading} />
     </main>
   );
 }
 
-function AllTimeTable() {
-  const [rows, setRows] = useState<
-    {
-      profile_id: string;
-      display_name: string | null;
-      raket_total: number;
-      fris_total: number;
-      streep_total: number;
-    }[]
-  >([]);
-  useEffect(() => {
-    void (async () => {
-      const { data, error } = await supabase.rpc("rekening_alltime");
-      if (!error) setRows(data ?? []);
-    })();
-  }, []);
-
+function AllTimeTable({ rows, loading }: { rows: RekeningRow[]; loading: boolean }) {
   // CSV helpers
   const csvEscape = (val: unknown) => {
     const s = String(val ?? "");
@@ -341,9 +357,7 @@ function AllTimeTable() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `rekening_alltime_${new Date()
-      .toISOString()
-      .slice(0, 10)}.csv`;
+    a.download = `rekening_alltime_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -354,7 +368,6 @@ function AllTimeTable() {
     if (!rows.length) return;
     try {
       const XLSX = await import("xlsx");
-      // Build a flat array of objects for the sheet
       const data = rows.map((r) => ({
         display_name: r.display_name ?? r.profile_id.slice(0, 8),
         raket_total: r.raket_total,
@@ -373,9 +386,7 @@ function AllTimeTable() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `rekening_alltime_${new Date()
-        .toISOString()
-        .slice(0, 10)}.xlsx`;
+      a.download = `rekening_alltime_${new Date().toISOString().slice(0, 10)}.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -392,7 +403,7 @@ function AllTimeTable() {
         <h2 className="font-semibold">Rekening (all-time)</h2>
         <button
           onClick={downloadXlsx}
-          disabled={!rows.length}
+          disabled={!rows.length || loading}
           className="px-3 py-1.5 rounded text-sm bg-emerald-600 text-white disabled:opacity-50 hover:bg-emerald-700"
           title={rows.length ? "Download Excel" : "Geen data"}
         >
@@ -410,16 +421,24 @@ function AllTimeTable() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.profile_id} className="border-b last:border-0">
-                <td className="py-2 pr-3">
-                  {r.display_name ?? r.profile_id.slice(0, 8)}
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="py-6 text-center text-gray-500">
+                  Laden...
                 </td>
-                <td className="py-2 pr-3">{r.raket_total}</td>
-                <td className="py-2 pr-3">{r.fris_total}</td>
-                <td className="py-2">{r.streep_total}</td>
               </tr>
-            ))}
+            ) : (
+              rows.map((r) => (
+                <tr key={r.profile_id} className="border-b last:border-0">
+                  <td className="py-2 pr-3">
+                    {r.display_name ?? r.profile_id.slice(0, 8)}
+                  </td>
+                  <td className="py-2 pr-3">{r.raket_total}</td>
+                  <td className="py-2 pr-3">{r.fris_total}</td>
+                  <td className="py-2">{r.streep_total}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
