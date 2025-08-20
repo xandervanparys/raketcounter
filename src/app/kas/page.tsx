@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { House, ChevronDown, ChevronUp } from "lucide-react";
 import RekeningOverview, { exportRekeningXlsx } from "@/components/RekeningOverview";
-import type { RekeningRow } from "@/types";
+import type { RekeningRow, Profile, ActionRow } from "@/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,20 +31,6 @@ function useRekeningAllTime() {
   return { rows, loading, refetch };
 }
 
-type Profile = {
-  id: string;
-  username: string | null;
-  full_name: string | null;
-  email?: string | null;
-};
-type ActionRow = {
-  entry_id: string;
-  table_name: "raket_logs" | "strepen_logs" | "frisdrank_logs";
-  kind: string;
-  amount: number;
-  ts: string;
-};
-
 export default function KasDashboard() {
   const router = useRouter();
   const [kasChecked, setKasChecked] = useState(false);
@@ -60,10 +46,8 @@ export default function KasDashboard() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Track which user's quick-add dropdown is open (for chevron up/down)
   const [openQuickFor, setOpenQuickFor] = useState<string | null>(null);
 
-  // Per-user quantities for quick logging
   const [qtyByUser, setQtyByUser] = useState<Record<string, { raket: number; fris: number; streep: number }>>({});
 
   const getQty = (userId: string) => {
@@ -98,7 +82,6 @@ export default function KasDashboard() {
       });
       if (error) throw error;
       setOpenQuickFor(null);
-      // If we are viewing this user's recent actions, refresh it
       if (selectedUser === userId) {
         await loadRecent(userId);
       }
@@ -136,8 +119,6 @@ export default function KasDashboard() {
         .select("id, username, full_name");
       if (pErr) return;
 
-      // emails (optional): join via auth if you’ve mirrored emails somewhere;
-      // or skip email entirely on the KAS screen.
       const list: Profile[] = (profiles ?? []).map((p) => ({
         id: p.id,
         username: p.username,
@@ -145,7 +126,6 @@ export default function KasDashboard() {
       }));
       setUsers(list);
 
-      // current KAS set
       const { data: roles, error: rErr } = await supabase
         .from("user_roles")
         .select("user_id, role");
