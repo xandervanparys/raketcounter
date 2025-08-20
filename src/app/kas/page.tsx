@@ -97,7 +97,7 @@ export default function KasDashboard() {
         amount,
       });
       if (error) throw error;
-
+      setOpenQuickFor(null);
       // If we are viewing this user's recent actions, refresh it
       if (selectedUser === userId) {
         await loadRecent(userId);
