@@ -381,7 +381,7 @@ export default function KasDashboard() {
                             onChange={(e) => setQtyField(u.id, "raket", Number(e.target.value))}
                           />
                           <button
-                            className="px-2 py-1 rounded bg-green-600 text-white text-xs disabled:opacity-50"
+                            className="w-full h-10 px-2 py-1 rounded bg-green-600 text-white text-xs disabled:opacity-50"
                             disabled={loading}
                             onClick={() => addLogFor(u.id, "raket", getQty(u.id).raket)}
                           >
@@ -401,7 +401,7 @@ export default function KasDashboard() {
                             onChange={(e) => setQtyField(u.id, "fris", Number(e.target.value))}
                           />
                           <button
-                            className="px-2 py-1 rounded bg-pink-600 text-white text-xs disabled:opacity-50"
+                            className="w-full h-10 px-2 py-1 rounded bg-pink-600 text-white text-xs disabled:opacity-50"
                             disabled={loading}
                             onClick={() => addLogFor(u.id, "fris", getQty(u.id).fris)}
                           >
@@ -421,7 +421,7 @@ export default function KasDashboard() {
                             onChange={(e) => setQtyField(u.id, "streep", Number(e.target.value))}
                           />
                           <button
-                            className="px-2 py-1 rounded bg-blue-600 text-white text-xs disabled:opacity-50"
+                            className="w-full h-10 px-2 py-1 rounded bg-blue-600 text-white text-xs disabled:opacity-50"
                             disabled={loading}
                             onClick={() => addLogFor(u.id, "streep", getQty(u.id).streep)}
                           >
