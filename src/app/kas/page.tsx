@@ -54,6 +54,9 @@ export default function KasDashboard() {
   const [loading, setLoading] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [raketAmount, setRaketAmount] = useState("1");
+  const [frisdrankAmount, setFrisdrankAmount] = useState("1");
+  const [streepAmount, setStreepAmount] = useState("1");
 
   useEffect(() => {
     void (async () => {
@@ -163,6 +166,72 @@ export default function KasDashboard() {
     } catch (e) {
       console.error(e);
       alert("Ongedaan maken mislukt.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logRaketFor = async (userId: string, amount: number) => {
+    if (isNaN(amount) || amount <= 0) {
+      alert("Voer een positief aantal in.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("raket_logs").insert({
+        profile_id: userId,
+        amount,
+      });
+      if (error) throw error;
+      await loadRecent(userId);
+      await refetchRekening();
+    } catch (e) {
+      console.error(e);
+      alert("Kon geen raket loggen.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logFrisdrankFor = async (userId: string, amount: number) => {
+    if (isNaN(amount) || amount <= 0) {
+      alert("Voer een positief aantal in.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("frisdrank_logs").insert({
+        profile_id: userId,
+        amount,
+      });
+      if (error) throw error;
+      await loadRecent(userId);
+      await refetchRekening();
+    } catch (e) {
+      console.error(e);
+      alert("Kon geen ND drank loggen.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logStrepenFor = async (userId: string, amount: number) => {
+    if (isNaN(amount) || amount <= 0) {
+      alert("Voer een positief aantal in.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("strepen_logs").insert({
+        profile_id: userId,
+        amount,
+      });
+      if (error) throw error;
+      await loadRecent(userId);
+      await refetchRekening();
+    } catch (e) {
+      console.error(e);
+      alert("Kon geen streep loggen.");
     } finally {
       setLoading(false);
     }
@@ -317,6 +386,70 @@ export default function KasDashboard() {
               Geselecteerde ongedaan maken
             </button>
           </div>
+          {selectedUser && (
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  min="1"
+                  value={raketAmount}
+                  onChange={(e) => setRaketAmount(e.target.value)}
+                  className="w-16 border rounded px-1 py-0.5"
+                />
+                <button
+                  onClick={() => {
+                    logRaketFor(selectedUser, parseInt(raketAmount, 10));
+                    setRaketAmount("1");
+                  }}
+                  className="bg-green-600 text-white px-3 py-1 rounded disabled:opacity-50"
+                  disabled={loading}
+                >
+                  + Raket
+                </button>
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  min="1"
+                  value={frisdrankAmount}
+                  onChange={(e) => setFrisdrankAmount(e.target.value)}
+                  className="w-16 border rounded px-1 py-0.5"
+                />
+                <button
+                  onClick={() => {
+                    logFrisdrankFor(
+                      selectedUser,
+                      parseInt(frisdrankAmount, 10)
+                    );
+                    setFrisdrankAmount("1");
+                  }}
+                  className="bg-indigo-600 text-white px-3 py-1 rounded disabled:opacity-50"
+                  disabled={loading}
+                >
+                  + ND-drank
+                </button>
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  min="1"
+                  value={streepAmount}
+                  onChange={(e) => setStreepAmount(e.target.value)}
+                  className="w-16 border rounded px-1 py-0.5"
+                />
+                <button
+                  onClick={() => {
+                    logStrepenFor(selectedUser, parseInt(streepAmount, 10));
+                    setStreepAmount("1");
+                  }}
+                  className="bg-purple-600 text-white px-3 py-1 rounded disabled:opacity-50"
+                  disabled={loading}
+                >
+                  + Strepen
+                </button>
+              </div>
+            </div>
+          )}
           <ul className="space-y-2">
             {recent.map((r) => (
               <li
