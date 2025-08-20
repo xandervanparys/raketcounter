@@ -2,9 +2,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { House } from "lucide-react";
+import { House, ChevronDown, ChevronUp } from "lucide-react";
 import RekeningOverview, { exportRekeningXlsx } from "@/components/RekeningOverview";
 import type { RekeningRow } from "@/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function useRekeningAllTime() {
   const [rows, setRows] = useState<RekeningRow[]>([]);
@@ -54,6 +59,57 @@ export default function KasDashboard() {
   const [loading, setLoading] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Track which user's quick-add dropdown is open (for chevron up/down)
+  const [openQuickFor, setOpenQuickFor] = useState<string | null>(null);
+
+  // Per-user quantities for quick logging
+  const [qtyByUser, setQtyByUser] = useState<Record<string, { raket: number; fris: number; streep: number }>>({});
+
+  const getQty = (userId: string) => {
+    return (
+      qtyByUser[userId] || { raket: 1, fris: 1, streep: 1 }
+    );
+  };
+
+  const setQtyField = (userId: string, field: "raket" | "fris" | "streep", value: number) => {
+    setQtyByUser((prev) => ({
+      ...prev,
+      [userId]: { ...getQty(userId), [field]: Math.max(1, Math.floor(value || 1)) },
+    }));
+  };
+
+  const addLogFor = async (
+    userId: string,
+    kind: "raket" | "fris" | "streep",
+    amount: number
+  ) => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      let table: "raket_logs" | "frisdrank_logs" | "strepen_logs";
+      if (kind === "raket") table = "raket_logs";
+      else if (kind === "fris") table = "frisdrank_logs";
+      else table = "strepen_logs";
+
+      const { error } = await supabase.from(table).insert({
+        profile_id: userId,
+        amount,
+      });
+      if (error) throw error;
+
+      // If we are viewing this user's recent actions, refresh it
+      if (selectedUser === userId) {
+        await loadRecent(userId);
+      }
+      await refetchRekening();
+    } catch (e) {
+      console.error(e);
+      alert("Toevoegen mislukt.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     void (async () => {
@@ -270,28 +326,112 @@ export default function KasDashboard() {
                 >
                   {displayName(u)}
                 </button>
-                <button
-                  onClick={() => {
-                    if (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      if (
+                        kasIds.has(u.id)
+                          ? confirm(`Wil je ${displayName(u)} verwijderen als kas?`)
+                          : confirm(`Wil je ${displayName(u)} kas maken?`)
+                      ) {
+                        toggleKas(u.id, !kasIds.has(u.id));
+                      }
+                    }}
+                    className={`px-3 py-1 rounded text-sm ${
                       kasIds.has(u.id)
-                        ? confirm(
-                            `Wil je ${displayName(u)} verwijderen als kas?`
-                          )
-                        : confirm(`Wil je ${displayName(u)} kas maken?`)
-                    ) {
-                      toggleKas(u.id, !kasIds.has(u.id));
-                    }
-                  }}
-                  className={`px-3 py-1 rounded text-sm ${
-                    kasIds.has(u.id)
-                      ? "bg-yellow-500 text-black"
-                      : "bg-gray-200 text-gray-900"
-                  }`}
-                  disabled={loading}
-                  title={kasIds.has(u.id) ? "Kas intrekken" : "Kas toekennen"}
-                >
-                  {kasIds.has(u.id) ? "KAS" : "Maak KAS"}
-                </button>
+                        ? "bg-yellow-500 text-black"
+                        : "bg-gray-200 text-gray-900"
+                    }`}
+                    disabled={loading}
+                    title={kasIds.has(u.id) ? "Kas intrekken" : "Kas toekennen"}
+                  >
+                    {kasIds.has(u.id) ? "KAS" : "Maak KAS"}
+                  </button>
+
+                  {/* Quick add dropdown */}
+                  <DropdownMenu
+                    open={openQuickFor === u.id}
+                    onOpenChange={(open) => {
+                      setOpenQuickFor(open ? u.id : (openQuickFor === u.id ? null : openQuickFor));
+                    }}
+                  >
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="px-2 py-1 rounded border text-sm hover:bg-gray-50 dark:hover:bg-gray-800 inline-flex items-center gap-1"
+                        title="Snel toevoegen"
+                        aria-expanded={openQuickFor === u.id}
+                      >
+                        {openQuickFor === u.id ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="p-3 w-64 space-y-3">
+                      {/* Raketten */}
+                      <div className="space-y-2">
+                        <div className="text-xs font-medium">Raketten</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={1}
+                            className="w-20 rounded border px-2 py-1 text-sm"
+                            value={getQty(u.id).raket}
+                            onChange={(e) => setQtyField(u.id, "raket", Number(e.target.value))}
+                          />
+                          <button
+                            className="px-2 py-1 rounded bg-green-600 text-white text-xs disabled:opacity-50"
+                            disabled={loading}
+                            onClick={() => addLogFor(u.id, "raket", getQty(u.id).raket)}
+                          >
+                            Log raket
+                          </button>
+                        </div>
+                      </div>
+                      {/* ND-drinks */}
+                      <div className="space-y-2">
+                        <div className="text-xs font-medium">ND-drinks</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={1}
+                            className="w-20 rounded border px-2 py-1 text-sm"
+                            value={getQty(u.id).fris}
+                            onChange={(e) => setQtyField(u.id, "fris", Number(e.target.value))}
+                          />
+                          <button
+                            className="px-2 py-1 rounded bg-pink-600 text-white text-xs disabled:opacity-50"
+                            disabled={loading}
+                            onClick={() => addLogFor(u.id, "fris", getQty(u.id).fris)}
+                          >
+                            Log ND
+                          </button>
+                        </div>
+                      </div>
+                      {/* Strepen */}
+                      <div className="space-y-2">
+                        <div className="text-xs font-medium">Strepen</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={1}
+                            className="w-20 rounded border px-2 py-1 text-sm"
+                            value={getQty(u.id).streep}
+                            onChange={(e) => setQtyField(u.id, "streep", Number(e.target.value))}
+                          />
+                          <button
+                            className="px-2 py-1 rounded bg-blue-600 text-white text-xs disabled:opacity-50"
+                            disabled={loading}
+                            onClick={() => addLogFor(u.id, "streep", getQty(u.id).streep)}
+                          >
+                            Log streep
+                          </button>
+                        </div>
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </li>
             ))}
           </ul>
