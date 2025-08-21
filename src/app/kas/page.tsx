@@ -210,7 +210,12 @@ export default function KasDashboard() {
       }
     } catch (e: unknown) {
       const err = e as { message?: string; details?: string; hint?: string };
-      console.error("recent_actions_for_user failed:", err?.message, err?.details, err?.hint);
+      console.error(
+        "recent_actions_for_user failed:",
+        err?.message,
+        err?.details,
+        err?.hint
+      );
     }
   };
 
@@ -239,7 +244,12 @@ export default function KasDashboard() {
       }
     } catch (e: unknown) {
       const err = e as { message?: string; details?: string; hint?: string };
-      console.error("loadMore recent failed:", err?.message, err?.details, err?.hint);
+      console.error(
+        "loadMore recent failed:",
+        err?.message,
+        err?.details,
+        err?.hint
+      );
     }
   };
 
@@ -531,7 +541,7 @@ export default function KasDashboard() {
               Geselecteerde ongedaan maken
             </button>
           </div>
-          <ul className="space-y-2">
+          <ul className="space-y-2 max-h-80 overflow-y-auto pr-1">
             {recent.map((r) => (
               <li
                 key={r.entry_id}
@@ -563,21 +573,23 @@ export default function KasDashboard() {
                 </span>
               </li>
             ))}
+
             {!recent.length && (
               <li className="text-sm text-gray-500">Geen recente acties.</li>
             )}
-          </ul>
 
-          {recentHasMore && (
-            <div className="mt-3">
-              <button
-                onClick={loadMoreRecent}
-                className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+            {recentHasMore && (
+              <li className=" rounded">
+                <button
+                  onClick={loadMoreRecent}
+                  disabled={loading}
+                  className="w-full px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50"
                 >
                   Meer laden
                 </button>
-            </div>
-          )}
+              </li>
+            )}
+          </ul>
         </section>
       </div>
 
