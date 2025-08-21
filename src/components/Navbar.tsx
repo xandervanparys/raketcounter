@@ -1,49 +1,76 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useState, useRef, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
-import { Settings, LogOut } from "lucide-react"
+import Link from "next/link";
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { Settings, LogOut, Euro } from "lucide-react";
 
 export default function Navbar() {
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [authChecked, setAuthChecked] = useState(false)
-  const [open, setOpen] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isKasleider, setKasleider] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (data?.user) {
-        setUserEmail(data?.user?.email ?? null)
-        setAvatarUrl(data?.user?.user_metadata?.avatar_url ?? '/ND_default.png')
+        const uid = data.user.id;
+        setUserEmail(data.user.email ?? null);
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", uid)
+          .single();
+
+        if (!error && profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url);
+        } else {
+          // Fallback to auth metadata (e.g., first Google login) or default
+          type Meta = { avatar_url?: string };
+          const meta = data.user.user_metadata as Meta | null | undefined;
+          const metaUrl = meta?.avatar_url;
+          setAvatarUrl(metaUrl ?? "/ND_default.png");
+        }
+        // Check KAS role via RPC (uses auth.uid() by default)
+        try {
+          const { data: kasRes, error: kasErr } = await supabase.rpc('is_kas');
+          if (kasErr) {
+            console.warn('is_kas RPC error:', kasErr);
+          } else {
+            setKasleider(Boolean(kasRes));
+          }
+        } catch (e) {
+          console.warn('is_kas RPC threw:', e);
+        }
       }
-      setAuthChecked(true)
-    })
-  }, [])
+      setAuthChecked(true);
+    });
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpen(false)
+        setOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setUserEmail(null)
-    setOpen(false)
-    router.push("/login")
-  }
+    await supabase.auth.signOut();
+    setUserEmail(null);
+    setOpen(false);
+    router.push("/login");
+  };
 
   return (
     <nav className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/80">
@@ -91,8 +118,8 @@ export default function Navbar() {
 
           {/* User Menu */}
           <div className="flex items-center">
-            {authChecked && (
-              userEmail ? (
+            {authChecked &&
+              (userEmail ? (
                 <div className="relative" ref={menuRef}>
                   <button
                     onClick={() => setOpen(!open)}
@@ -100,7 +127,7 @@ export default function Navbar() {
                     title={userEmail}
                   >
                     <img
-                      src={avatarUrl ?? '/ND_default.png'}
+                      src={avatarUrl ?? "/ND_default.png"}
                       alt="User Avatar"
                       className="h-full w-full object-cover rounded-full"
                     />
@@ -109,15 +136,30 @@ export default function Navbar() {
                   {open && (
                     <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 py-1">
                       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Signed in as</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{userEmail}</p>
-                        
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Signed in as
+                        </p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {userEmail}
+                        </p>
                       </div>
+
+                      {isKasleider && (
+                        <button
+                          onClick={() => {
+                            router.push("/kas");
+                          }}
+                          className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                        >
+                          <Euro className="w-4 h-4 mr-3" />
+                          Kas
+                        </button>
+                      )}
 
                       <button
                         onClick={() => {
-                          router.push("/settings")
-                          setOpen(false)
+                          router.push("/settings");
+                          setOpen(false);
                         }}
                         className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                       >
@@ -150,8 +192,7 @@ export default function Navbar() {
                     Sign up
                   </Link>
                 </div>
-              )
-            )}
+              ))}
           </div>
 
           {/* Mobile menu button */}
@@ -160,8 +201,18 @@ export default function Navbar() {
               onClick={() => setMobileOpen(!mobileOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
             >
-              <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                className="h-6 w-6"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </button>
           </div>
@@ -204,5 +255,5 @@ export default function Navbar() {
         )}
       </div>
     </nav>
-  )
+  );
 }

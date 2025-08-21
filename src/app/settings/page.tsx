@@ -42,7 +42,8 @@ export default function SettingsPage() {
       return null
     }
 
-    return supabase.storage.from('avatars').getPublicUrl(`public/${userId}`).data.publicUrl
+    const result = supabase.storage.from('avatars').getPublicUrl(`public/${userId}`)
+    return `${result.data.publicUrl}?t=${Date.now()}`
   }
 
   const updateProfile = async () => {
