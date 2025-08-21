@@ -162,8 +162,8 @@ export default function KasDashboard() {
     setSelectedActions(new Set())
     try {
       const { data, error } = await supabase
-        .rpc("recent_actions_for_user", { target: userId, n: PAGE_SIZE })
-        .throwOnError()
+        .rpc("recent_actions_for_user", { target: userId, n: PAGE_SIZE });
+      if(error) throw(error);
 
       // If PostgREST returns an error, `.throwOnError()` will throw before this line.
       const rows = (data ?? []) as ActionRow[]
