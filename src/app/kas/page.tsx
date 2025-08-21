@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { House, ChevronDown, ChevronUp } from "lucide-react";
-import RekeningOverview, { exportRekeningXlsx } from "@/components/RekeningOverview";
+import RekeningOverview, {
+  exportRekeningXlsx,
+} from "@/components/RekeningOverview";
 import type { RekeningRow, Profile, ActionRow } from "@/types";
 import {
   DropdownMenu,
@@ -17,7 +19,7 @@ function useRekeningAllTime() {
 
   const refetch = async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc('rekening_alltime');
+    const { data, error } = await supabase.rpc("rekening_alltime");
     if (!error && data) {
       setRows(data as RekeningRow[]);
     }
@@ -39,6 +41,12 @@ export default function KasDashboard() {
   const [kasIds, setKasIds] = useState<Set<string>>(new Set());
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [recent, setRecent] = useState<ActionRow[]>([]);
+  const [recentCursor, setRecentCursor] = useState<{
+    ts: string;
+    id: string;
+  } | null>(null);
+  const [recentHasMore, setRecentHasMore] = useState(false);
+  const PAGE_SIZE = 5;
   const [selectedActions, setSelectedActions] = useState<Set<string>>(
     new Set()
   );
@@ -48,18 +56,25 @@ export default function KasDashboard() {
 
   const [openQuickFor, setOpenQuickFor] = useState<string | null>(null);
 
-  const [qtyByUser, setQtyByUser] = useState<Record<string, { raket: number; fris: number; streep: number }>>({});
+  const [qtyByUser, setQtyByUser] = useState<
+    Record<string, { raket: number; fris: number; streep: number }>
+  >({});
 
   const getQty = (userId: string) => {
-    return (
-      qtyByUser[userId] || { raket: 1, fris: 1, streep: 1 }
-    );
+    return qtyByUser[userId] || { raket: 1, fris: 1, streep: 1 };
   };
 
-  const setQtyField = (userId: string, field: "raket" | "fris" | "streep", value: number) => {
+  const setQtyField = (
+    userId: string,
+    field: "raket" | "fris" | "streep",
+    value: number
+  ) => {
     setQtyByUser((prev) => ({
       ...prev,
-      [userId]: { ...getQty(userId), [field]: Math.max(1, Math.floor(value || 1)) },
+      [userId]: {
+        ...getQty(userId),
+        [field]: Math.max(1, Math.floor(value || 1)),
+      },
     }));
   };
 
@@ -81,6 +96,7 @@ export default function KasDashboard() {
         amount,
       });
       if (error) throw error;
+      // no-op; `.throwOnError()` is not used here because we want the typed `error`
       setOpenQuickFor(null);
       if (selectedUser === userId) {
         await loadRecent(userId);
@@ -138,7 +154,11 @@ export default function KasDashboard() {
     })();
   }, [isKas]);
 
-  const { rows: rekeningRows, loading: rekeningLoading, refetch: refetchRekening } = useRekeningAllTime();
+  const {
+    rows: rekeningRows,
+    loading: rekeningLoading,
+    refetch: refetchRekening,
+  } = useRekeningAllTime();
 
   const displayName = (u: Profile) =>
     (u.username && u.username.trim() !== "" ? u.username : u.full_name) ??
@@ -171,15 +191,56 @@ export default function KasDashboard() {
   const loadRecent = async (userId: string) => {
     setSelectedUser(userId);
     setSelectedActions(new Set());
-    const { data, error } = await supabase.rpc("recent_actions_for_user", {
-      target: userId,
-      n: 5,
-    });
-    if (error) {
-      console.error(error);
-      return;
+    try {
+      const { data, error } = await supabase
+        .rpc("recent_actions_for_user", { target: userId, n: PAGE_SIZE })
+        .throwOnError();
+
+      // If PostgREST returns an error, `.throwOnError()` will throw before this line.
+      const rows = (data ?? []) as ActionRow[];
+      setRecent(rows);
+
+      if (rows.length > 0) {
+        const last = rows[rows.length - 1];
+        setRecentCursor({ ts: last.ts, id: last.entry_id });
+        setRecentHasMore(rows.length === PAGE_SIZE);
+      } else {
+        setRecentCursor(null);
+        setRecentHasMore(false);
+      }
+    } catch (e: unknown) {
+      const err = e as { message?: string; details?: string; hint?: string };
+      console.error("recent_actions_for_user failed:", err?.message, err?.details, err?.hint);
     }
-    setRecent(data ?? []);
+  };
+
+  // append next page
+  const loadMoreRecent = async () => {
+    if (!selectedUser || !recentCursor) return;
+    try {
+      const { data } = await supabase
+        .rpc("recent_actions_for_user", {
+          target: selectedUser,
+          n: PAGE_SIZE,
+          cursor_ts: recentCursor.ts,
+          cursor_id: recentCursor.id,
+        })
+        .throwOnError();
+
+      const next = (data ?? []) as ActionRow[];
+      setRecent((prev) => [...prev, ...next]);
+
+      if (next.length > 0) {
+        const last = next[next.length - 1];
+        setRecentCursor({ ts: last.ts, id: last.entry_id });
+        setRecentHasMore(next.length === PAGE_SIZE);
+      } else {
+        setRecentHasMore(false);
+      }
+    } catch (e: unknown) {
+      const err = e as { message?: string; details?: string; hint?: string };
+      console.error("loadMore recent failed:", err?.message, err?.details, err?.hint);
+    }
   };
 
   const undoSelected = async () => {
@@ -236,12 +297,16 @@ export default function KasDashboard() {
 
       {showResetConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowResetConfirm(false)} />
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowResetConfirm(false)}
+          />
           <div className="relative z-10 w-full max-w-md rounded-lg border bg-white p-5 shadow-lg dark:bg-gray-900 dark:border-gray-800">
             <h3 className="text-lg font-semibold mb-2">Database resetten</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-              Je staat op het punt om <strong>alle logs</strong> (raket, strepen, frisdrank) te verwijderen.
-              Wil je eerst de huidige rekening als Excel downloaden?
+              Je staat op het punt om <strong>alle logs</strong> (raket,
+              strepen, frisdrank) te verwijderen. Wil je eerst de huidige
+              rekening als Excel downloaden?
             </p>
             <div className="flex flex-col sm:flex-row gap-2 justify-end">
               <button
@@ -269,7 +334,9 @@ export default function KasDashboard() {
                   setShowResetConfirm(false);
                   setLoading(true);
                   try {
-                    const { data, error } = await supabase.rpc("reset_all_logs");
+                    const { data, error } = await supabase.rpc(
+                      "reset_all_logs"
+                    );
                     if (error) throw error;
                     alert(`Reset OK: ${JSON.stringify(data)}`);
                     if (selectedUser) await loadRecent(selectedUser);
@@ -311,7 +378,9 @@ export default function KasDashboard() {
                     onClick={() => {
                       if (
                         kasIds.has(u.id)
-                          ? confirm(`Wil je ${displayName(u)} verwijderen als kas?`)
+                          ? confirm(
+                              `Wil je ${displayName(u)} verwijderen als kas?`
+                            )
                           : confirm(`Wil je ${displayName(u)} kas maken?`)
                       ) {
                         toggleKas(u.id, !kasIds.has(u.id));
@@ -332,7 +401,13 @@ export default function KasDashboard() {
                   <DropdownMenu
                     open={openQuickFor === u.id}
                     onOpenChange={(open) => {
-                      setOpenQuickFor(open ? u.id : (openQuickFor === u.id ? null : openQuickFor));
+                      setOpenQuickFor(
+                        open
+                          ? u.id
+                          : openQuickFor === u.id
+                          ? null
+                          : openQuickFor
+                      );
                     }}
                   >
                     <DropdownMenuTrigger asChild>
@@ -348,7 +423,10 @@ export default function KasDashboard() {
                         )}
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="p-3 w-64 space-y-3">
+                    <DropdownMenuContent
+                      align="end"
+                      className="p-3 w-64 space-y-3"
+                    >
                       {/* Raketten */}
                       <div className="space-y-2">
                         <div className="text-xs font-medium">Raketten</div>
@@ -358,12 +436,16 @@ export default function KasDashboard() {
                             min={1}
                             className="w-20 rounded border px-2 py-1 text-sm"
                             value={getQty(u.id).raket}
-                            onChange={(e) => setQtyField(u.id, "raket", Number(e.target.value))}
+                            onChange={(e) =>
+                              setQtyField(u.id, "raket", Number(e.target.value))
+                            }
                           />
                           <button
                             className="w-full h-10 px-2 py-1 rounded bg-green-600 text-white text-xs disabled:opacity-50"
                             disabled={loading}
-                            onClick={() => addLogFor(u.id, "raket", getQty(u.id).raket)}
+                            onClick={() =>
+                              addLogFor(u.id, "raket", getQty(u.id).raket)
+                            }
                           >
                             Log raket
                           </button>
@@ -378,12 +460,16 @@ export default function KasDashboard() {
                             min={1}
                             className="w-20 rounded border px-2 py-1 text-sm"
                             value={getQty(u.id).fris}
-                            onChange={(e) => setQtyField(u.id, "fris", Number(e.target.value))}
+                            onChange={(e) =>
+                              setQtyField(u.id, "fris", Number(e.target.value))
+                            }
                           />
                           <button
                             className="w-full h-10 px-2 py-1 rounded bg-pink-600 text-white text-xs disabled:opacity-50"
                             disabled={loading}
-                            onClick={() => addLogFor(u.id, "fris", getQty(u.id).fris)}
+                            onClick={() =>
+                              addLogFor(u.id, "fris", getQty(u.id).fris)
+                            }
                           >
                             Log ND
                           </button>
@@ -398,12 +484,20 @@ export default function KasDashboard() {
                             min={1}
                             className="w-20 rounded border px-2 py-1 text-sm"
                             value={getQty(u.id).streep}
-                            onChange={(e) => setQtyField(u.id, "streep", Number(e.target.value))}
+                            onChange={(e) =>
+                              setQtyField(
+                                u.id,
+                                "streep",
+                                Number(e.target.value)
+                              )
+                            }
                           />
                           <button
                             className="w-full h-10 px-2 py-1 rounded bg-blue-600 text-white text-xs disabled:opacity-50"
                             disabled={loading}
-                            onClick={() => addLogFor(u.id, "streep", getQty(u.id).streep)}
+                            onClick={() =>
+                              addLogFor(u.id, "streep", getQty(u.id).streep)
+                            }
                           >
                             Log streep
                           </button>
@@ -473,6 +567,17 @@ export default function KasDashboard() {
               <li className="text-sm text-gray-500">Geen recente acties.</li>
             )}
           </ul>
+
+          {recentHasMore && (
+            <div className="mt-3">
+              <button
+                onClick={loadMoreRecent}
+                className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                >
+                  Meer laden
+                </button>
+            </div>
+          )}
         </section>
       </div>
 
