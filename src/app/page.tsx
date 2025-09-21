@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
@@ -33,6 +33,7 @@ export default function HomePage() {
   const [buzzing] = useState(false);
   const [buzzAmount, setBuzzAmount] = useState<string>("1");
   const router = useRouter();
+  const params = useSearchParams();
 
   const fetchAndSetCount = async (
     table: string,
@@ -52,19 +53,56 @@ export default function HomePage() {
   };
 
   useEffect(() => {
+    const invite = params.get("invite");
+    if (invite) {
+      localStorage.setItem("inviteCode", invite);
+    }
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) router.push("/login");
-      else {
-        setUser(data.user);
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("username, avatar_url")
-          .eq("id", data.user.id)
-          .single();
-        if (!error && profile) {
-          setUsername(profile.username);
-          setAvatarUrl(profile.avatar_url);
+      if (!data.user) {
+        router.push("/login");
+        return;
+      }
+
+      setUser(data.user);
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("username, avatar_url")
+        .eq("id", data.user.id)
+        .single();
+
+      if (!profile && profileError?.code === "PGRST116") {
+        // no profile found --> check invite
+        const inviteCode = localStorage.getItem("inviteCode");
+        if (!inviteCode) {
+          await supabase.auth.signOut();
+          router.push("/login?error=invite_required");
+          return;
         }
+
+        const { error: inviteError } = await supabase.rpc("use_invite", {
+          p_code: inviteCode,
+        });
+        if (inviteError) {
+          console.error("Invite error", inviteError);
+          await supabase.auth.signOut();
+          router.push("/login?error=invalid_invite");
+          return;
+        }
+
+        const { error: insertError } = await supabase.from("profiles").insert({
+          id: data.user.id,
+          full_name: data.user.user_metadata.full_name ?? data.user.email,
+          avatar_url: data.user.user_metadata.avatar_url ?? null,
+          username: null,
+        });
+
+        // Clear invite code so it can't be reused
+        localStorage.removeItem("inviteCode");
+        router.refresh(); // reload page with new profile
+      } else if (profile) {
+        setUsername(profile.username);
+        setAvatarUrl(profile.avatar_url);
       }
     });
   }, [router]);
