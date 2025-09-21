@@ -32,6 +32,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [buzzing] = useState(false);
   const [buzzAmount, setBuzzAmount] = useState<string>("1");
+  const [checking, setChecking] = useState(true);
   const router = useRouter();
   const params = useSearchParams();
 
@@ -60,6 +61,7 @@ export default function HomePage() {
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) {
         router.push("/login");
+        setChecking(false);
         return;
       }
 
@@ -77,6 +79,7 @@ export default function HomePage() {
         if (!inviteCode) {
           await supabase.auth.signOut();
           router.push("/login?error=invite_required");
+          setChecking(false);
           return;
         }
 
@@ -87,6 +90,7 @@ export default function HomePage() {
           console.error("Invite error", inviteError);
           await supabase.auth.signOut();
           router.push("/login?error=invalid_invite");
+          setChecking(false);
           return;
         }
 
@@ -104,6 +108,7 @@ export default function HomePage() {
         setUsername(profile.username);
         setAvatarUrl(profile.avatar_url);
       }
+      setChecking(false);
     });
   }, [router]);
 
@@ -179,7 +184,19 @@ export default function HomePage() {
     closeButton?.click();
   };
 
-  if (!user) return null;
+  if (checking || !user)
+    return (
+      <main className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+        <div>
+          <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-center text-gray-700 dark:text-gray-300">
+            Raketcounter laden…
+          </p>
+        </div>
+      </main>
+    );
+
+  // if (!user) return null;
 
   return (
     <main className="p-8 text-center">
