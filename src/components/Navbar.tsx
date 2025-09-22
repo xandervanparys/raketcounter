@@ -12,8 +12,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button"; 
-import { Input } from "@/components/ui/input"; 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function Navbar() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -307,7 +307,9 @@ export default function Navbar() {
               readOnly
               value={inviteLink ?? ""}
               className="flex-1"
-              onFocus={(e: { target: { select: () => any; }; }) => e.target.select()}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) =>
+                e.target.select()
+              }
             />
             <Button
               onClick={() => {
@@ -319,7 +321,13 @@ export default function Navbar() {
                 }
               }}
             >
-              {copied ? "🍻 Copied!" : (<><Copy className="mr-1" /> Copy</>)}
+              {copied ? (
+                "🍻 Copied!"
+              ) : (
+                <>
+                  <Copy className="mr-1" /> Copy
+                </>
+              )}
             </Button>
           </div>
           <DialogFooter>
