@@ -93,13 +93,20 @@ export default function HomePage() {
           setChecking(false);
           return;
         }
-
+        
         const { error: insertError } = await supabase.from("profiles").insert({
           id: data.user.id,
           full_name: data.user.user_metadata.full_name ?? data.user.email,
           avatar_url: data.user.user_metadata.avatar_url ?? null,
           username: null,
         });
+        if (insertError){
+          console.error("Insert Profile Error", insertError);
+          await supabase.auth.signOut();
+          router.push("/login?error=insert_profile");
+          setChecking(false);
+          return;
+        }
 
         // Clear invite code so it can't be reused
         localStorage.removeItem("inviteCode");
