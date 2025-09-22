@@ -307,7 +307,7 @@ export default function Navbar() {
               readOnly
               value={inviteLink ?? ""}
               className="flex-1"
-              onFocus={(e: React.FocusEvent<HTMLInputElement>) => e.target.select()}
+              onFocus={(e: { target: { select: () => any; }; }) => e.target.select()}
             />
             <Button
               onClick={() => {
