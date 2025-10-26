@@ -34,7 +34,6 @@ export default function HomePage() {
   const [buzzAmount, setBuzzAmount] = useState<string>("1");
   const [checking, setChecking] = useState(true);
   const router = useRouter();
-  const params = useSearchParams();
 
   const fetchAndSetCount = async (
     table: string,
@@ -54,69 +53,87 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    const invite = params.get("invite");
-    if (invite) {
-      localStorage.setItem("inviteCode", invite);
-    }
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) {
+    let cancelled = false;
+  
+    (async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+  
+      if (!user) {
         router.push("/login");
-        setChecking(false);
+        if (!cancelled) setChecking(false);
         return;
       }
-
-      setUser(data.user);
-
+  
+      if (!cancelled) setUser(user);
+  
+      // Try to load profile
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("username, avatar_url")
-        .eq("id", data.user.id)
+        .eq("id", user.id)
         .single();
-
+  
+      // No profile yet: require invite and let the DB create it via RPC
       if (!profile && profileError?.code === "PGRST116") {
-        // no profile found --> check invite
         const inviteCode = localStorage.getItem("inviteCode");
         if (!inviteCode) {
           await supabase.auth.signOut();
           router.push("/login?error=invite_required");
-          setChecking(false);
+          if (!cancelled) setChecking(false);
           return;
         }
-
+  
         const { error: inviteError } = await supabase.rpc("use_invite", {
           p_code: inviteCode,
         });
+  
         if (inviteError) {
           console.error("Invite error", inviteError);
           await supabase.auth.signOut();
           router.push("/login?error=invalid_invite");
-          setChecking(false);
+          if (!cancelled) setChecking(false);
           return;
         }
-
-        const { error: insertError } = await supabase.from("profiles").insert({
-          id: data.user.id,
-          full_name: data.user.user_metadata.full_name ?? data.user.email,
-          avatar_url: data.user.user_metadata.avatar_url ?? null,
-          username: null,
-        });
-        if (insertError) {
-          console.error("Insert Profile Error", insertError);
-          await supabase.auth.signOut();
-          router.push("/login?error=insert_profile");
-          setChecking(false);
-          return;
-        }
-
-        // Clear invite code so it can't be reused
+  
+        // DB has created the profile; clear the invite and fetch it
         localStorage.removeItem("inviteCode");
-        router.refresh(); // reload page with new profile
-      } else if (profile) {
-        setUsername(profile.username);
-        setAvatarUrl(profile.avatar_url);
+  
+        const { data: profile2, error: profileErr2 } = await supabase
+          .from("profiles")
+          .select("username, avatar_url")
+          .eq("id", user.id)
+          .single();
+  
+        if (profileErr2 || !profile2) {
+          // If something unexpected happened, show a soft error
+          console.error("Profile fetch after invite failed:", profileErr2);
+          router.push("/login?error=insert_profile");
+          if (!cancelled) setChecking(false);
+          return;
+        }
+  
+        if (!cancelled) {
+          setUsername(profile2.username);
+          setAvatarUrl(profile2.avatar_url);
+          setChecking(false);
+        }
+        return;
       }
-      setChecking(false);
-    });
+  
+      // Profile exists: proceed
+      if (profile) {
+        if (!cancelled) {
+          setUsername(profile.username);
+          setAvatarUrl(profile.avatar_url);
+        }
+      }
+      if (!cancelled) setChecking(false);
+    })();
+  
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   useEffect(() => {
