@@ -4,7 +4,16 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Settings, LogOut, Euro } from "lucide-react";
+import { Settings, LogOut, Euro, MailPlus, Copy } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function Navbar() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -13,6 +22,10 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -38,14 +51,14 @@ export default function Navbar() {
         }
         // Check KAS role via RPC (uses auth.uid() by default)
         try {
-          const { data: kasRes, error: kasErr } = await supabase.rpc('is_kas');
+          const { data: kasRes, error: kasErr } = await supabase.rpc("is_kas");
           if (kasErr) {
-            console.warn('is_kas RPC error:', kasErr);
+            console.warn("is_kas RPC error:", kasErr);
           } else {
             setKasleider(Boolean(kasRes));
           }
         } catch (e) {
-          console.warn('is_kas RPC threw:', e);
+          console.warn("is_kas RPC threw:", e);
         }
       }
       setAuthChecked(true);
@@ -70,6 +83,26 @@ export default function Navbar() {
     setUserEmail(null);
     setOpen(false);
     router.push("/login");
+  };
+
+  const generateInvite = async () => {
+    setInviteLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("generate_invite");
+      if (error) {
+        console.error("Error generating invite:", error);
+        setInviteLoading(false);
+        return;
+      }
+      const inviteCode = data as string;
+      const url = `${window.location.origin}/invite/${inviteCode}`;
+      setInviteLink(url);
+      setInviteOpen(true);
+    } catch (e) {
+      console.error("Exception generating invite:", e);
+    } finally {
+      setInviteLoading(false);
+    }
   };
 
   return (
@@ -155,6 +188,15 @@ export default function Navbar() {
                           Kas
                         </button>
                       )}
+
+                      <button
+                        onClick={generateInvite}
+                        disabled={inviteLoading}
+                        className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <MailPlus className="w-4 h-4 mr-3" />
+                        Invite drinkers
+                      </button>
 
                       <button
                         onClick={() => {
@@ -254,6 +296,47 @@ export default function Navbar() {
           </div>
         )}
       </div>
+
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Link</DialogTitle>
+          </DialogHeader>
+          <div className="flex space-x-2">
+            <Input
+              readOnly
+              value={inviteLink ?? ""}
+              className="flex-1"
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) =>
+                e.target.select()
+              }
+            />
+            <Button
+              onClick={() => {
+                if (inviteLink) {
+                  navigator.clipboard.writeText(inviteLink).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  });
+                }
+              }}
+            >
+              {copied ? (
+                "🍻 Copied!"
+              ) : (
+                <>
+                  <Copy className="mr-1" /> Copy
+                </>
+              )}
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setInviteOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 }
